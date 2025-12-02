@@ -1,13 +1,11 @@
 {
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "data/**/*"
     }
   },
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "includeFiles": [
-    "data/**/*"
-  ]
+  "outputDirectory": ".next"
 }
 
