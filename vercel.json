@@ -4,6 +4,10 @@
       "maxDuration": 30
     }
   },
-  "buildCommand": "npm run build"
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "includeFiles": [
+    "data/**/*"
+  ]
 }
 

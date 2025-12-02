@@ -96,14 +96,26 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
-          <h1 className="text-lg sm:text-2xl font-bold truncate">Upto Nov 2025</h1>
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/40">
+        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* <h1 className="text-base sm:text-2xl font-semibold tracking-tight truncate">
+                Prep
+              </h1> */}
+              <span className="hidden sm:inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                Updated to Nov 2025
+              </span>
+            </div>
+            <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground line-clamp-1">
+              Filter questions by company, difficulty, frequency and time period.
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             {/* Mobile Filters Toggle */}
             <button
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className="lg:hidden p-2 rounded-lg bg-secondary hover:bg-accent transition-colors relative"
+              className="lg:hidden p-2 rounded-xl bg-secondary/80 hover:bg-accent/80 active:bg-accent/90 transition-colors relative backdrop-blur-xl border border-white/10"
               aria-label="Toggle filters"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,22 +133,24 @@ export default function Home() {
       </header>
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:items-start">
           {/* Filters Sidebar - Mobile: Overlay, Desktop: Sidebar */}
-          <div className={`lg:col-span-1 ${filtersOpen ? 'block' : 'hidden'} lg:block`}>
+          <div
+            className={`lg:col-span-1 ${filtersOpen ? 'block' : 'hidden'} lg:block lg:sticky lg:top-24 lg:self-start`}
+          >
             {/* Mobile Overlay */}
             {filtersOpen && (
               <div
-                className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
                 onClick={() => setFiltersOpen(false)}
                 aria-hidden="true"
               />
             )}
             {/* Filters Panel */}
-            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card border-r lg:border-r-0 lg:border border-border overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card/80 backdrop-blur-2xl border-r lg:border-r-0 lg:border border-white/15 dark:border-white/10 shadow-xl lg:shadow-lg overflow-y-auto lg:max-h-[calc(100vh-7rem)] transform transition-transform duration-300 ease-in-out ${
               filtersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             }`}>
-              <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between lg:hidden">
+              <div className="sticky top-0 bg-card/80 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between lg:hidden">
                 <h2 className="text-lg font-bold">Filters</h2>
                 <button
                   onClick={() => setFiltersOpen(false)}
@@ -166,7 +180,7 @@ export default function Home() {
           <div className="lg:col-span-3">
             {/* Selected Companies Tags at Top */}
             {!filters.showMostFrequent && filters.companies.length > 0 && (
-              <div className="mb-4 p-3 sm:p-4 bg-card border border-border rounded-lg">
+              <div className="mb-4 p-3 sm:p-4 bg-card/80 backdrop-blur-2xl border border-white/15 dark:border-white/10 rounded-xl shadow-lg">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs sm:text-sm font-medium text-muted-foreground">Selected:</span>
                   {filters.companies.map(companyName => (

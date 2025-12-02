@@ -51,9 +51,21 @@ CSV format: `ID,URL,Title,Difficulty,Acceptance %,Frequency %`
 
 This project is configured for easy deployment on Vercel:
 
-1. Push your code to GitHub
-2. Import the project in Vercel
-3. Vercel will automatically detect Next.js and deploy
+1. **Ensure data folder is committed**: The `data/` folder must be committed to Git (it's not in `.gitignore`)
+2. Push your code to GitHub
+3. Import the project in Vercel
+4. Vercel will automatically detect Next.js and deploy
+
+### Important Notes for Vercel Deployment:
+
+- **Data Folder Size**: Vercel has a 50MB limit for serverless functions. If your `data/` folder exceeds this, consider:
+  - Using Vercel Blob Storage
+  - Pre-processing data into JSON files
+  - Using a database instead of file system
+  
+- **Verification**: The build process includes a verification step to ensure the data folder is accessible. Check build logs if deployment fails.
+
+- **GitHub Display**: If you see "blob/main/data" on GitHub, that's normal - it's just how GitHub displays folders in the repository browser.
 
 ## Technologies
 

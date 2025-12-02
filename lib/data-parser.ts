@@ -288,17 +288,30 @@ export function getAllQuestions(): LeetCodeQuestion[] {
 
 /**
  * Find most frequent questions across all companies
- * Returns questions that appear in multiple companies, sorted by frequency
- * Now includes company tags in the question object
+ *
+ * This:
+ * - Looks at questions from ALL companies (independent of any current filters)
+ * - Counts in how many companies each question appears
+ * - Aggregates the frequency across companies
+ * - Returns questions that appear in at least `minCompanies` companies
+ * - Sorts primarily by number of companies (most shared first),
+ *   then by aggregated frequency (higher first)
+ * - Adds `companyTags` (list of companies) and keeps frequency as an
+ *   aggregated value for display
  */
-export function getMostFrequentQuestions(minCompanies: number = 2): Array<LeetCodeQuestion & { companyTags?: string[] }> {
+export function getMostFrequentQuestions(
+  minCompanies: number = 2
+): Array<LeetCodeQuestion & { companyTags?: string[] }> {
   const companies = getAllCompanies();
-  const questionMap = new Map<string, {
-    question: LeetCodeQuestion;
-    companies: Set<string>;
-    totalFrequency: number;
-    count: number;
-  }>();
+  const questionMap = new Map<
+    string,
+    {
+      question: LeetCodeQuestion;
+      companies: Set<string>;
+      totalFrequency: number;
+      count: number;
+    }
+  >();
 
   // Load all company data (only from all.csv to avoid duplicates)
   for (const company of companies) {
@@ -336,12 +349,22 @@ export function getMostFrequentQuestions(minCompanies: number = 2): Array<LeetCo
     }
   }
 
-  // Sort by frequency (descending) and then by number of companies (descending)
+  // Sort by:
+  // 1) Number of companies this question appears in (descending)
+  // 2) Aggregated frequency (descending)
   return frequentQuestions.sort((a, b) => {
+    const aCompanies = a.companyTags?.length ?? 0;
+    const bCompanies = b.companyTags?.length ?? 0;
+
+    if (bCompanies !== aCompanies) {
+      return bCompanies - aCompanies;
+    }
+
     if (b.frequency !== a.frequency) {
       return b.frequency - a.frequency;
     }
-    return 0;
+
+    return a.title.localeCompare(b.title);
   });
 }
 

@@ -24,23 +24,25 @@ export function QuestionCard({ question }: QuestionCardProps) {
   const companiesToShow = question.companyTags || (question.company ? [question.company] : []);
 
   return (
-    <div className="p-3 sm:p-4 border border-border rounded-lg hover:shadow-lg active:shadow-md transition-shadow bg-card">
+    <div className="group p-3 sm:p-4 border border-white/15 dark:border-white/10 rounded-2xl bg-card/70 backdrop-blur-xl hover:bg-card/80 transition-all duration-150 hover:shadow-xl active:shadow-md hover:-translate-y">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
         <a
           href={question.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-base sm:text-lg font-semibold hover:text-primary active:text-primary/80 transition-colors flex-1 break-words touch-manipulation"
+          className="text-base sm:text-lg font-semibold tracking-tight hover:text-primary active:text-primary/80 transition-colors flex-1 break-words touch-manipulation"
         >
           {question.title}
         </a>
-        <span className={`px-2.5 sm:px-2 py-1 rounded text-xs font-medium whitespace-nowrap flex-shrink-0 ${getDifficultyColor(question.difficulty)}`}>
+        <span className={`px-2.5 sm:px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 shadow-sm ${getDifficultyColor(question.difficulty)}`}>
           {question.difficulty}
         </span>
       </div>
       
-      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 text-xs sm:text-sm">
-        <span className="text-muted-foreground">ID: {question.id}</span>
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 text-[11px] sm:text-xs">
+        <span className="px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground/90">
+          ID: {question.id}
+        </span>
         <span className="text-muted-foreground hidden sm:inline">•</span>
         <span className="text-muted-foreground">Acceptance: {question.acceptanceRate.toFixed(1)}%</span>
         <span className="text-muted-foreground hidden sm:inline">•</span>

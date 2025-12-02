@@ -47,11 +47,16 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 bg-card border border-border rounded-lg lg:block">
-      <h2 className="text-xl sm:text-2xl font-bold hidden lg:block">Filters</h2>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 bg-card/75 backdrop-blur-2xl border border-white/15 dark:border-white/10 rounded-2xl shadow-xl lg:block">
+      <div className="hidden lg:flex items-baseline justify-between gap-2">
+        <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Filters</h2>
+        {/* <p className="text-xs text-muted-foreground">
+          Refine companies, time periods and difficulty.
+        </p> */}
+      </div>
 
       {/* Most Frequent Questions Toggle */}
-      <div className="space-y-2">
+      <div className="space-y-2 pt-1 border-t border-border/60">
         <label className="flex items-start sm:items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1">
           <input
             type="checkbox"
@@ -96,7 +101,7 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
           )}
 
           {/* Company Selection with Search */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-1 border-t border-border/60">
             <label className="block text-sm sm:text-base font-medium">Companies</label>
             <input
               type="text"
@@ -170,7 +175,7 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
       )}
 
       {/* Difficulty Selection */}
-      <div className="space-y-2">
+      <div className="space-y-2 pt-1 border-t border-border/60">
         <label className="block text-sm sm:text-base font-medium">Difficulty</label>
         <div className="flex flex-wrap gap-3 sm:gap-4">
           {['Easy', 'Medium', 'Hard'].map(difficulty => (

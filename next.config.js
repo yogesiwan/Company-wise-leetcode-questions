@@ -1,12 +1,17 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Ensure data folder is included in the build
-  serverRuntimeConfig: {
-    // This ensures server-side code can access the data folder
+  // CRITICAL for Vercel: Include data folder in serverless function output
+  // This ensures the data folder is available in Vercel's serverless functions
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/**': [
+        './data/**/*',
+      ],
+    },
   },
-  // Make sure static files and data are accessible
-  publicRuntimeConfig: {},
 }
 
 module.exports = nextConfig
