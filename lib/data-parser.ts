@@ -2,7 +2,30 @@ import { LeetCodeQuestion, CompanyData } from '@/types';
 import fs from 'fs';
 import path from 'path';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+// Get data directory - handle both local and Vercel environments
+function getDataDir(): string {
+  const cwd = process.cwd();
+  // Try the standard path first
+  let dataDir = path.join(cwd, 'data');
+  
+  // On Vercel, the working directory might be different
+  // Try alternative paths if the standard one doesn't exist
+  if (!fs.existsSync(dataDir)) {
+    // Try parent directory (in case we're in .next or similar)
+    const altPath1 = path.join(cwd, '..', 'data');
+    if (fs.existsSync(altPath1)) {
+      return altPath1;
+    }
+    
+    // Try absolute path from project root
+    const altPath2 = path.resolve(cwd, 'data');
+    if (fs.existsSync(altPath2)) {
+      return altPath2;
+    }
+  }
+  
+  return dataDir;
+}
 
 /**
  * Parse a CSV line properly handling quoted fields
@@ -95,7 +118,8 @@ function parseCSVLineToQuestion(line: string, company: string, timePeriod: strin
  * Read and parse a CSV file for a company
  */
 function parseCompanyCSV(companyName: string, fileName: string): LeetCodeQuestion[] {
-  const filePath = path.join(DATA_DIR, companyName, fileName);
+  const dataDir = getDataDir();
+  const filePath = path.join(dataDir, companyName, fileName);
   
   if (!fs.existsSync(filePath)) {
     return [];
@@ -125,11 +149,15 @@ function parseCompanyCSV(companyName: string, fileName: string): LeetCodeQuestio
  * Filters out hidden directories (starting with .) and ensures directory contains CSV files
  */
 export function getAllCompanies(): string[] {
-  if (!fs.existsSync(DATA_DIR)) {
+  const dataDir = getDataDir();
+  
+  if (!fs.existsSync(dataDir)) {
+    console.error(`Data directory does not exist: ${dataDir}`);
+    console.error(`Current working directory: ${process.cwd()}`);
     return [];
   }
 
-  const entries = fs.readdirSync(DATA_DIR, { withFileTypes: true });
+  const entries = fs.readdirSync(dataDir, { withFileTypes: true });
   const companies = entries
     .filter(entry => {
       // Only include directories
@@ -143,7 +171,7 @@ export function getAllCompanies(): string[] {
       }
       
       // Ensure the directory contains at least one CSV file
-      const companyDir = path.join(DATA_DIR, entry.name);
+      const companyDir = path.join(dataDir, entry.name);
       try {
         const files = fs.readdirSync(companyDir);
         return files.some(file => file.endsWith('.csv'));
@@ -162,7 +190,8 @@ export function getAllCompanies(): string[] {
  * Get all available time periods for a company
  */
 export function getCompanyTimePeriods(companyName: string): string[] {
-  const companyDir = path.join(DATA_DIR, companyName);
+  const dataDir = getDataDir();
+  const companyDir = path.join(dataDir, companyName);
   if (!fs.existsSync(companyDir)) {
     return [];
   }
@@ -179,7 +208,8 @@ export function getCompanyTimePeriods(companyName: string): string[] {
  * CRITICAL: When timePeriod is 'all', only load from all.csv to avoid duplicates
  */
 export function loadCompanyData(companyName: string, timePeriod?: string): CompanyData {
-  const companyDir = path.join(DATA_DIR, companyName);
+  const dataDir = getDataDir();
+  const companyDir = path.join(dataDir, companyName);
   if (!fs.existsSync(companyDir)) {
     return {
       name: companyName,
