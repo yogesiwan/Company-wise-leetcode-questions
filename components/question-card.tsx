@@ -24,42 +24,42 @@ export function QuestionCard({ question }: QuestionCardProps) {
   const companiesToShow = question.companyTags || (question.company ? [question.company] : []);
 
   return (
-    <div className="p-4 border border-border rounded-lg hover:shadow-lg transition-shadow bg-card">
-      <div className="flex items-start justify-between mb-3">
+    <div className="p-3 sm:p-4 border border-border rounded-lg hover:shadow-lg active:shadow-md transition-shadow bg-card">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-2 sm:mb-3">
         <a
           href={question.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-lg font-semibold hover:text-primary transition-colors flex-1 mr-2"
+          className="text-base sm:text-lg font-semibold hover:text-primary active:text-primary/80 transition-colors flex-1 break-words touch-manipulation"
         >
           {question.title}
         </a>
-        <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getDifficultyColor(question.difficulty)}`}>
+        <span className={`px-2.5 sm:px-2 py-1 rounded text-xs font-medium whitespace-nowrap flex-shrink-0 ${getDifficultyColor(question.difficulty)}`}>
           {question.difficulty}
         </span>
       </div>
       
-      <div className="flex flex-wrap items-center gap-2 mb-2">
-        <span className="text-xs text-muted-foreground">ID: {question.id}</span>
-        <span className="text-xs text-muted-foreground">•</span>
-        <span className="text-xs text-muted-foreground">Acceptance: {question.acceptanceRate.toFixed(1)}%</span>
-        <span className="text-xs text-muted-foreground">•</span>
-        <span className="text-xs text-muted-foreground">Frequency: {question.frequency.toFixed(1)}%</span>
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 text-xs sm:text-sm">
+        <span className="text-muted-foreground">ID: {question.id}</span>
+        <span className="text-muted-foreground hidden sm:inline">•</span>
+        <span className="text-muted-foreground">Acceptance: {question.acceptanceRate.toFixed(1)}%</span>
+        <span className="text-muted-foreground hidden sm:inline">•</span>
+        <span className="text-muted-foreground">Frequency: {question.frequency.toFixed(1)}%</span>
         {question.timePeriod && question.timePeriod !== 'all' && (
           <>
-            <span className="text-xs text-muted-foreground">•</span>
-            <span className="text-xs text-muted-foreground">Period: {question.timePeriod.replace(/-/g, ' ')}</span>
+            <span className="text-muted-foreground hidden sm:inline">•</span>
+            <span className="text-muted-foreground">Period: {question.timePeriod.replace(/-/g, ' ')}</span>
           </>
         )}
       </div>
 
       {/* Company Tags */}
       {companiesToShow.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2">
           {companiesToShow.map((company, idx) => (
             <span
               key={`${company}-${idx}`}
-              className="px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+              className="px-2 sm:px-2.5 py-1 rounded text-xs font-medium bg-primary/10 text-primary border border-primary/20"
             >
               {company}
             </span>

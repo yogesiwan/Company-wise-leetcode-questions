@@ -47,19 +47,19 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
   );
 
   return (
-    <div className="space-y-6 p-6 bg-card border border-border rounded-lg">
-      <h2 className="text-2xl font-bold">Filters</h2>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 bg-card border border-border rounded-lg lg:block">
+      <h2 className="text-xl sm:text-2xl font-bold hidden lg:block">Filters</h2>
 
       {/* Most Frequent Questions Toggle */}
       <div className="space-y-2">
-        <label className="flex items-center space-x-2 cursor-pointer">
+        <label className="flex items-start sm:items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1">
           <input
             type="checkbox"
             checked={filters.showMostFrequent || false}
             onChange={handleMostFrequentToggle}
-            className="w-4 h-4 rounded border-border"
+            className="w-5 h-5 sm:w-4 sm:h-4 mt-0.5 sm:mt-0 rounded border-border flex-shrink-0"
           />
-          <span className="font-medium">Show Most Frequent Questions (across all companies)</span>
+          <span className="text-sm sm:text-base font-medium leading-relaxed">Show Most Frequent Questions (across all companies)</span>
         </label>
       </div>
 
@@ -97,54 +97,54 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
 
           {/* Company Selection with Search */}
           <div className="space-y-2">
-            <label className="block font-medium">Companies</label>
+            <label className="block text-sm sm:text-base font-medium">Companies</label>
             <input
               type="text"
               placeholder="Search companies..."
               value={companySearch}
               onChange={(e) => setCompanySearch(e.target.value)}
-              className="w-full p-2 border border-border rounded bg-background text-sm"
+              className="w-full p-2.5 sm:p-2 border border-border rounded bg-background text-sm sm:text-base touch-manipulation"
             />
-            <div className="max-h-48 overflow-y-auto border border-border rounded p-2 space-y-1">
+            <div className="max-h-64 sm:max-h-48 overflow-y-auto border border-border rounded p-2 space-y-1">
               {filteredCompanies.length === 0 ? (
                 <div className="text-sm text-muted-foreground p-2 text-center">No companies found</div>
               ) : (
                 filteredCompanies.map(company => (
-                  <label key={company.name} className="flex items-center space-x-2 cursor-pointer hover:bg-accent p-1 rounded">
+                  <label key={company.name} className="flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:bg-accent active:bg-accent/80 p-2 sm:p-1 rounded touch-manipulation">
                     <input
                       type="checkbox"
                       checked={filters.companies.includes(company.name)}
                       onChange={() => handleCompanyToggle(company.name)}
-                      className="w-4 h-4 rounded border-border"
+                      className="w-5 h-5 sm:w-4 sm:h-4 rounded border-border flex-shrink-0"
                     />
-                    <span className="text-sm">{company.name}</span>
+                    <span className="text-sm sm:text-base">{company.name}</span>
                   </label>
                 ))
               )}
             </div>
             {filters.companies.length > 1 && (
               <div className="mt-2 space-y-2">
-                <label className="block font-medium text-sm">Multi-Company Mode</label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="block font-medium text-xs sm:text-sm">Multi-Company Mode</label>
+                <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                  <label className="flex items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1">
                     <input
                       type="radio"
                       name="multiCompanyMode"
                       checked={filters.multiCompanyMode === 'union'}
                       onChange={() => handleMultiCompanyModeChange('union')}
-                      className="w-4 h-4"
+                      className="w-5 h-5 sm:w-4 sm:h-4"
                     />
-                    <span className="text-sm">Union (All questions)</span>
+                    <span className="text-sm sm:text-base">Union (All questions)</span>
                   </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
+                  <label className="flex items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1">
                     <input
                       type="radio"
                       name="multiCompanyMode"
                       checked={filters.multiCompanyMode === 'intersection'}
                       onChange={() => handleMultiCompanyModeChange('intersection')}
-                      className="w-4 h-4"
+                      className="w-5 h-5 sm:w-4 sm:h-4"
                     />
-                    <span className="text-sm">Intersection (Common questions)</span>
+                    <span className="text-sm sm:text-base">Intersection (Common questions)</span>
                   </label>
                 </div>
               </div>
@@ -153,11 +153,11 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
 
           {/* Time Period Selection */}
           <div className="space-y-2">
-            <label className="block font-medium">Time Period</label>
+            <label className="block text-sm sm:text-base font-medium">Time Period</label>
             <select
               value={filters.timePeriod || 'all'}
               onChange={(e) => onFiltersChange({ ...filters, timePeriod: e.target.value })}
-              className="w-full p-2 border border-border rounded bg-background"
+              className="w-full p-2.5 sm:p-2 border border-border rounded bg-background text-sm sm:text-base touch-manipulation"
             >
               <option value="all">All Time</option>
               <option value="six-months">Last 6 Months</option>
@@ -171,17 +171,17 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
 
       {/* Difficulty Selection */}
       <div className="space-y-2">
-        <label className="block font-medium">Difficulty</label>
-        <div className="flex space-x-4">
+        <label className="block text-sm sm:text-base font-medium">Difficulty</label>
+        <div className="flex flex-wrap gap-3 sm:gap-4">
           {['Easy', 'Medium', 'Hard'].map(difficulty => (
-            <label key={difficulty} className="flex items-center space-x-2 cursor-pointer">
+            <label key={difficulty} className="flex items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1">
               <input
                 type="checkbox"
                 checked={filters.difficulties.includes(difficulty)}
                 onChange={() => handleDifficultyToggle(difficulty)}
-                className="w-4 h-4 rounded border-border"
+                className="w-5 h-5 sm:w-4 sm:h-4 rounded border-border flex-shrink-0"
               />
-              <span className="text-sm">{difficulty}</span>
+              <span className="text-sm sm:text-base">{difficulty}</span>
             </label>
           ))}
         </div>
@@ -189,10 +189,10 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
 
       {/* Frequency Range */}
       <div className="space-y-2">
-        <label className="block font-medium">Frequency Range (%)</label>
-        <div className="flex space-x-4">
+        <label className="block text-sm sm:text-base font-medium">Frequency Range (%)</label>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
-            <label className="block text-sm text-muted-foreground mb-1">Min</label>
+            <label className="block text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-1">Min</label>
             <input
               type="number"
               min="0"
@@ -203,12 +203,12 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
                 ...filters,
                 minFrequency: e.target.value ? parseFloat(e.target.value) : undefined,
               })}
-              className="w-full p-2 border border-border rounded bg-background"
+              className="w-full p-2.5 sm:p-2 border border-border rounded bg-background text-sm sm:text-base touch-manipulation"
               placeholder="0"
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm text-muted-foreground mb-1">Max</label>
+            <label className="block text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-1">Max</label>
             <input
               type="number"
               min="0"
@@ -219,7 +219,7 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
                 ...filters,
                 maxFrequency: e.target.value ? parseFloat(e.target.value) : undefined,
               })}
-              className="w-full p-2 border border-border rounded bg-background"
+              className="w-full p-2.5 sm:p-2 border border-border rounded bg-background text-sm sm:text-base touch-manipulation"
               placeholder="100"
             />
           </div>

@@ -122,6 +122,7 @@ function parseCompanyCSV(companyName: string, fileName: string): LeetCodeQuestio
 
 /**
  * Get all company names from the data directory
+ * Filters out hidden directories (starting with .) and ensures directory contains CSV files
  */
 export function getAllCompanies(): string[] {
   if (!fs.existsSync(DATA_DIR)) {
@@ -129,10 +130,32 @@ export function getAllCompanies(): string[] {
   }
 
   const entries = fs.readdirSync(DATA_DIR, { withFileTypes: true });
-  return entries
-    .filter(entry => entry.isDirectory())
+  const companies = entries
+    .filter(entry => {
+      // Only include directories
+      if (!entry.isDirectory()) {
+        return false;
+      }
+      
+      // Exclude hidden/system directories (starting with .)
+      if (entry.name.startsWith('.')) {
+        return false;
+      }
+      
+      // Ensure the directory contains at least one CSV file
+      const companyDir = path.join(DATA_DIR, entry.name);
+      try {
+        const files = fs.readdirSync(companyDir);
+        return files.some(file => file.endsWith('.csv'));
+      } catch {
+        // If we can't read the directory, exclude it
+        return false;
+      }
+    })
     .map(entry => entry.name)
     .sort();
+  
+  return companies;
 }
 
 /**

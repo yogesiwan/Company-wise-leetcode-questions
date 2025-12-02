@@ -20,6 +20,7 @@ export default function Home() {
   });
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState(25);
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
 
   // Load companies on mount
   React.useEffect(() => {
@@ -95,43 +96,91 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">LeetCode Prep</h1>
-          <ThemeToggle />
+      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+          <h1 className="text-lg sm:text-2xl font-bold truncate">Upto Nov 2025</h1>
+          <div className="flex items-center gap-2">
+            {/* Mobile Filters Toggle */}
+            <button
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              className="lg:hidden p-2 rounded-lg bg-secondary hover:bg-accent transition-colors relative"
+              aria-label="Toggle filters"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              {((filters.companies.length > 0) || (filters.difficulties.length > 0) || filters.showMostFrequent) && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] text-primary-foreground flex items-center justify-center">
+                  {(filters.companies.length || 0) + (filters.difficulties.length || 0) + (filters.showMostFrequent ? 1 : 0)}
+                </span>
+              )}
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <Filters
-              companies={companies}
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+          {/* Filters Sidebar - Mobile: Overlay, Desktop: Sidebar */}
+          <div className={`lg:col-span-1 ${filtersOpen ? 'block' : 'hidden'} lg:block`}>
+            {/* Mobile Overlay */}
+            {filtersOpen && (
+              <div
+                className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+                onClick={() => setFiltersOpen(false)}
+                aria-hidden="true"
+              />
+            )}
+            {/* Filters Panel */}
+            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card border-r lg:border-r-0 lg:border border-border overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+              filtersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+            }`}>
+              <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between lg:hidden">
+                <h2 className="text-lg font-bold">Filters</h2>
+                <button
+                  onClick={() => setFiltersOpen(false)}
+                  className="p-2 rounded-lg hover:bg-accent transition-colors"
+                  aria-label="Close filters"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <Filters
+                companies={companies}
+                filters={filters}
+                onFiltersChange={(newFilters) => {
+                  setFilters(newFilters);
+                  // Close filters on mobile after selection
+                  if (window.innerWidth < 1024) {
+                    setFiltersOpen(false);
+                  }
+                }}
+              />
+            </div>
           </div>
 
           {/* Questions List */}
           <div className="lg:col-span-3">
             {/* Selected Companies Tags at Top */}
             {!filters.showMostFrequent && filters.companies.length > 0 && (
-              <div className="mb-4 p-4 bg-card border border-border rounded-lg">
+              <div className="mb-4 p-3 sm:p-4 bg-card border border-border rounded-lg">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-muted-foreground">Selected:</span>
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">Selected:</span>
                   {filters.companies.map(companyName => (
                     <span
                       key={companyName}
-                      className="group relative px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5 hover:bg-primary/20 transition-colors"
+                      className="group relative px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5 hover:bg-primary/20 active:bg-primary/30 transition-colors touch-manipulation"
                     >
-                      {companyName}
+                      <span className="truncate max-w-[120px] sm:max-w-none">{companyName}</span>
                       <button
                         onClick={() => {
                           const newCompanies = filters.companies.filter(c => c !== companyName);
                           setFilters({ ...filters, companies: newCompanies });
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/30 rounded-full p-0.5 -mr-1"
+                        className="opacity-70 group-hover:opacity-100 group-active:opacity-100 transition-opacity hover:bg-primary/30 active:bg-primary/40 rounded-full p-1 -mr-1 min-w-[20px] min-h-[20px] flex items-center justify-center touch-manipulation"
                         aria-label={`Remove ${companyName}`}
                         title={`Remove ${companyName}`}
                       >
@@ -145,8 +194,8 @@ export default function Home() {
               </div>
             )}
 
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <h2 className="text-lg sm:text-xl font-semibold break-words">
                 {filters.showMostFrequent
                   ? 'Most Frequent Questions'
                   : filters.companies.length > 1
@@ -156,7 +205,7 @@ export default function Home() {
                   : 'Select a company to view questions'}
               </h2>
               {!loading && allQuestions.length > 0 && (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                   {allQuestions.length} question{allQuestions.length !== 1 ? 's' : ''}
                 </span>
               )}
@@ -184,7 +233,7 @@ export default function Home() {
 
             {!loading && !error && allQuestions.length > 0 && (
               <>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {paginatedQuestions.map((question, index) => (
                     <QuestionCard key={`${question.id}-${startIndex + index}`} question={question} />
                   ))}
