@@ -11,6 +11,36 @@ interface FiltersProps {
 
 export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
   const [companySearch, setCompanySearch] = React.useState('');
+  const [minFrequencyInput, setMinFrequencyInput] = React.useState(
+    filters.minFrequency !== undefined ? String(filters.minFrequency) : ''
+  );
+  const [maxFrequencyInput, setMaxFrequencyInput] = React.useState(
+    filters.maxFrequency !== undefined ? String(filters.maxFrequency) : ''
+  );
+
+  React.useEffect(() => {
+    setMinFrequencyInput(filters.minFrequency !== undefined ? String(filters.minFrequency) : '');
+  }, [filters.minFrequency]);
+
+  React.useEffect(() => {
+    setMaxFrequencyInput(filters.maxFrequency !== undefined ? String(filters.maxFrequency) : '');
+  }, [filters.maxFrequency]);
+
+  const commitFrequencyValue = (type: 'min' | 'max') => {
+    const value = type === 'min' ? minFrequencyInput : maxFrequencyInput;
+    const parsed = value.trim() === '' ? undefined : parseFloat(value);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+
+    const key = type === 'min' ? 'minFrequency' : 'maxFrequency';
+    const currentValue = filters[key];
+    if (parsed === currentValue) {
+      return;
+    }
+
+    onFiltersChange({ ...filters, [key]: parsed } as FilterOptions);
+  };
 
   const handleCompanyToggle = (companyName: string) => {
     const newCompanies = filters.companies.includes(companyName)
@@ -203,11 +233,15 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
               min="0"
               max="100"
               step="0.1"
-              value={filters.minFrequency || ''}
-              onChange={(e) => onFiltersChange({
-                ...filters,
-                minFrequency: e.target.value ? parseFloat(e.target.value) : undefined,
-              })}
+              value={minFrequencyInput}
+              onChange={(e) => setMinFrequencyInput(e.target.value)}
+              onBlur={() => commitFrequencyValue('min')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  commitFrequencyValue('min');
+                }
+              }}
               className="w-full p-2.5 sm:p-2 border border-border rounded bg-background text-sm sm:text-base touch-manipulation"
               placeholder="0"
             />
@@ -219,11 +253,15 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
               min="0"
               max="100"
               step="0.1"
-              value={filters.maxFrequency || ''}
-              onChange={(e) => onFiltersChange({
-                ...filters,
-                maxFrequency: e.target.value ? parseFloat(e.target.value) : undefined,
-              })}
+              value={maxFrequencyInput}
+              onChange={(e) => setMaxFrequencyInput(e.target.value)}
+              onBlur={() => commitFrequencyValue('max')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  commitFrequencyValue('max');
+                }
+              }}
               className="w-full p-2.5 sm:p-2 border border-border rounded bg-background text-sm sm:text-base touch-manipulation"
               placeholder="100"
             />

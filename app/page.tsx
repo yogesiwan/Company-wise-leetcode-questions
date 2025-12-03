@@ -21,6 +21,10 @@ export default function Home() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState(25);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchResults, setSearchResults] = React.useState<LeetCodeQuestion[]>([]);
+  const [searchLoading, setSearchLoading] = React.useState(false);
+  const [searchError, setSearchError] = React.useState<string | null>(null);
 
   // Load companies on mount
   React.useEffect(() => {
@@ -79,13 +83,84 @@ export default function Home() {
     fetchQuestions();
   }, [filters]);
 
+  // Global search effect with debounce
+  React.useEffect(() => {
+    const trimmedQuery = searchQuery.trim();
+
+    if (trimmedQuery.length < 2) {
+      setSearchResults([]);
+      setSearchError(null);
+      setSearchLoading(false);
+      return;
+    }
+
+    let isActive = true;
+    setSearchError(null);
+    const controller = new AbortController();
+    const debounceTimer = window.setTimeout(async () => {
+      try {
+        setSearchLoading(true);
+        const response = await fetch(`/api/questions/search?q=${encodeURIComponent(trimmedQuery)}`, {
+          signal: controller.signal,
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to search questions');
+        }
+        if (!isActive) return;
+        setSearchResults(data.questions || []);
+        setSearchError(null);
+      } catch (err) {
+        if (!isActive) return;
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return;
+        }
+        setSearchResults([]);
+        setSearchError(err instanceof Error ? err.message : 'Failed to search questions');
+      } finally {
+        if (!isActive) return;
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      isActive = false;
+      clearTimeout(debounceTimer);
+      controller.abort();
+    };
+  }, [searchQuery]);
+
+  const trimmedSearchQuery = searchQuery.trim();
+  const isSearchActive = trimmedSearchQuery.length >= 2;
+  const activeQuestions = isSearchActive ? searchResults : allQuestions;
+  const activeLoading = isSearchActive ? searchLoading : loading;
+  const activeError = isSearchActive ? searchError : error;
+  const defaultHeading = filters.showMostFrequent
+    ? 'Most Frequent Questions'
+    : filters.companies.length > 1
+      ? `${filters.multiCompanyMode === 'intersection' ? 'Common' : 'All'} Questions (${filters.companies.length} companies)`
+      : filters.companies.length === 1
+        ? `Questions for ${filters.companies[0]}`
+        : 'Select a company to view questions';
+  const questionHeading = isSearchActive
+    ? `Search results for "${trimmedSearchQuery}"`
+    : defaultHeading;
+  const questionCountLabel = isSearchActive
+    ? `${activeQuestions.length} match${activeQuestions.length !== 1 ? 'es' : ''}`
+    : `${activeQuestions.length} question${activeQuestions.length !== 1 ? 's' : ''}`;
+  const emptyStateMessage = isSearchActive
+    ? `No questions found for "${trimmedSearchQuery}"`
+    : filters.showMostFrequent || filters.companies.length > 0
+      ? 'No questions found matching your filters'
+      : 'Please select at least one company or enable "Most Frequent Questions"';
+
   // Calculate pagination
-  const totalPages = Math.ceil(allQuestions.length / itemsPerPage);
+  const totalPages = Math.ceil(activeQuestions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedQuestions = allQuestions.slice(startIndex, endIndex);
-  const showingFrom = allQuestions.length > 0 ? startIndex + 1 : 0;
-  const showingTo = Math.min(endIndex, allQuestions.length);
+  const paginatedQuestions = activeQuestions.slice(startIndex, endIndex);
+  const showingFrom = activeQuestions.length > 0 ? startIndex + 1 : 0;
+  const showingTo = Math.min(endIndex, activeQuestions.length);
 
   // Reset to first page if current page is out of bounds
   React.useEffect(() => {
@@ -94,11 +169,15 @@ export default function Home() {
     }
   }, [totalPages, currentPage]);
 
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [isSearchActive]);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/40">
-        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center justify-between gap-3">
-          <div className="min-w-0">
+        <div className="container mx-auto px-4 py-3 sm:py-4 flex flex-wrap items-center gap-3">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 sm:gap-3">
               {/* <h1 className="text-base sm:text-2xl font-semibold tracking-tight truncate">
                 Prep
@@ -111,7 +190,57 @@ export default function Home() {
               Filter questions by company, difficulty, frequency and time period.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="order-3 w-full sm:order-2 sm:w-auto sm:min-w-[230px]">
+            <label htmlFor="global-question-search" className="sr-only">
+              Search questions globally
+            </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
+                </svg>
+              </span>
+              <input
+                id="global-question-search"
+                type="search"
+                placeholder="Global search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-2xl border border-border/80 bg-background/90 px-9 pr-11 py-2 text-sm shadow-inner shadow-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground transition"
+                  aria-label="Clear search"
+                >
+                  {searchLoading ? (
+                    <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-primary/60 border-t-transparent" />
+                  ) : (
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] text-muted-foreground">
+              <span>Min 2 chars</span>
+              {isSearchActive && !searchLoading && !searchError && (
+                <>
+                  <span className="text-primary font-medium">
+                    {searchResults.length} match{searchResults.length !== 1 ? 'es' : ''}
+                  </span>
+                  <span>Filters paused</span>
+                </>
+              )}
+              {searchError && (
+                <span className="text-destructive">{searchError}</span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 sm:ml-auto order-2 sm:order-3">
             {/* Mobile Filters Toggle */}
             <button
               onClick={() => setFiltersOpen(!filtersOpen)}
@@ -210,42 +339,34 @@ export default function Home() {
 
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <h2 className="text-lg sm:text-xl font-semibold break-words">
-                {filters.showMostFrequent
-                  ? 'Most Frequent Questions'
-                  : filters.companies.length > 1
-                  ? `${filters.multiCompanyMode === 'intersection' ? 'Common' : 'All'} Questions (${filters.companies.length} companies)`
-                  : filters.companies.length === 1
-                  ? `Questions for ${filters.companies[0]}`
-                  : 'Select a company to view questions'}
+                {questionHeading}
               </h2>
-              {!loading && allQuestions.length > 0 && (
+              {!activeLoading && activeQuestions.length > 0 && (
                 <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
-                  {allQuestions.length} question{allQuestions.length !== 1 ? 's' : ''}
+                  {questionCountLabel}
                 </span>
               )}
             </div>
 
-            {error && (
+            {activeError && (
               <div className="p-4 mb-4 bg-destructive/10 border border-destructive rounded-lg text-destructive">
-                {error}
+                {activeError}
               </div>
             )}
 
-            {loading && (
+            {activeLoading && (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             )}
 
-            {!loading && !error && allQuestions.length === 0 && (
+            {!activeLoading && !activeError && activeQuestions.length === 0 && (
               <div className="p-8 text-center text-muted-foreground">
-                {filters.showMostFrequent || filters.companies.length > 0
-                  ? 'No questions found matching your filters'
-                  : 'Please select at least one company or enable "Most Frequent Questions"'}
+                {emptyStateMessage}
               </div>
             )}
 
-            {!loading && !error && allQuestions.length > 0 && (
+            {!activeLoading && !activeError && activeQuestions.length > 0 && (
               <>
                 <div className="space-y-3 sm:space-y-4">
                   {paginatedQuestions.map((question, index) => (
@@ -262,7 +383,7 @@ export default function Home() {
                     setItemsPerPage(items);
                     setCurrentPage(1);
                   }}
-                  totalItems={allQuestions.length}
+                  totalItems={activeQuestions.length}
                   showingFrom={showingFrom}
                   showingTo={showingTo}
                 />

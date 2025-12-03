@@ -67,11 +67,14 @@ export default function RootLayout({
                     </a>
                   </div>
                   <a
-                    href="https://www.buymeacoffee.com/yogesiwan"
+                    href="https://www.buymeacoffee.com/yogeshsiwan"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary hover:bg-primary/15 active:bg-primary/20 transition-colors"
+                    className="group inline-flex items-center gap-2 rounded-2xl border border-amber-400/60 bg-gradient-to-r from-amber-400/20 via-amber-300/15 to-amber-200/20 px-4 py-2 text-xs sm:text-sm font-semibold text-amber-700 dark:text-amber-100 shadow-[0_10px_25px_rgba(251,191,36,0.25)] transition hover:from-amber-400/30 hover:via-amber-300/25 hover:to-amber-200/30 hover:-translate-y-0.5 active:translate-y-0"
                   >
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-amber-500 text-base shadow-inner shadow-amber-500/30 group-hover:bg-white">
+                      ☕
+                    </span>
                     <span>Buy me a coffee</span>
                   </a>
                 </div>

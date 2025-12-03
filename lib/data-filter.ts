@@ -167,10 +167,16 @@ export function getFilteredQuestions(options: FilterOptions): {
   const tempOptions = { ...options };
   delete tempOptions.timePeriod;
   const filtered = filterQuestions(questions, tempOptions);
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (b.frequency !== a.frequency) {
+      return b.frequency - a.frequency;
+    }
+    return a.title.localeCompare(b.title);
+  });
 
   return {
-    questions: filtered,
-    totalCount: filtered.length,
+    questions: sortedFiltered,
+    totalCount: sortedFiltered.length,
   };
 }
 
