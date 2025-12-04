@@ -6,8 +6,11 @@ import { QuestionCard } from '@/components/question-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Pagination } from '@/components/pagination';
 import { FilterOptions, LeetCodeQuestion } from '@/types';
+import { useSession } from 'next-auth/react';
+import { AuthButton } from '@/components/auth-button';
 
 export default function Home() {
+  const { data: session } = useSession();
   const [companies, setCompanies] = React.useState<Array<{ name: string; availablePeriods: string[] }>>([]);
   const [allQuestions, setAllQuestions] = React.useState<LeetCodeQuestion[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -25,6 +28,9 @@ export default function Home() {
   const [searchResults, setSearchResults] = React.useState<LeetCodeQuestion[]>([]);
   const [searchLoading, setSearchLoading] = React.useState(false);
   const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [questionStates, setQuestionStates] = React.useState<
+    Record<string, { done: boolean; note: string }>
+  >({});
 
   // Load companies on mount
   React.useEffect(() => {
@@ -173,6 +179,104 @@ export default function Home() {
     setCurrentPage(1);
   }, [isSearchActive]);
 
+  // Load user question states for currently visible questions
+  React.useEffect(() => {
+    if (!session || paginatedQuestions.length === 0) {
+      return;
+    }
+
+    const ids = paginatedQuestions.map((q) => q.id);
+    const uniqueIds = Array.from(new Set(ids));
+
+    let aborted = false;
+
+    const loadStates = async () => {
+      try {
+        const params = new URLSearchParams({ ids: uniqueIds.join(',') });
+        const res = await fetch(`/api/user-question-states?${params.toString()}`);
+        if (!res.ok) {
+          console.error('Failed to load user question states');
+          return;
+        }
+        const data = await res.json();
+        if (aborted) return;
+        const nextStates: Record<string, { done: boolean; note: string }> = { ...questionStates };
+        for (const state of data.states || []) {
+          nextStates[state.questionId] = {
+            done: !!state.done,
+            note: state.note ?? '',
+          };
+        }
+        setQuestionStates(nextStates);
+      } catch (err) {
+        if (!aborted) {
+          console.error('Error fetching user question states', err);
+        }
+      }
+    };
+
+    loadStates();
+
+    return () => {
+      aborted = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, paginatedQuestions.map((q) => q.id).join(',')]);
+
+  const handleToggleDone = async (questionId: string, nextDone: boolean) => {
+    if (!session) return;
+    setQuestionStates((prev) => ({
+      ...prev,
+      [questionId]: {
+        done: nextDone,
+        note: prev[questionId]?.note ?? '',
+      },
+    }));
+
+    try {
+      const res = await fetch('/api/user-question-states', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ questionId, done: nextDone }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update state');
+      }
+    } catch (err) {
+      console.error('Failed to update done state', err);
+      // Optionally revert on error
+    }
+  };
+
+  const handleUpdateNote = async (questionId: string, note: string) => {
+    if (!session) return;
+    setQuestionStates((prev) => ({
+      ...prev,
+      [questionId]: {
+        done: prev[questionId]?.done ?? false,
+        note,
+      },
+    }));
+
+    try {
+      const res = await fetch('/api/user-question-states', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ questionId, note }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update note');
+      }
+    } catch (err) {
+      console.error('Failed to update note', err);
+      // keep optimistic UI; errors only logged
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/40">
@@ -226,7 +330,6 @@ export default function Home() {
               )}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] sm:text-[11px] text-muted-foreground">
-              <span>Min 2 chars</span>
               {isSearchActive && !searchLoading && !searchError && (
                 <>
                   <span className="text-primary font-medium">
@@ -244,10 +347,10 @@ export default function Home() {
             {/* Mobile Filters Toggle */}
             <button
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className="lg:hidden p-2 rounded-xl bg-secondary/80 hover:bg-accent/80 active:bg-accent/90 transition-colors relative backdrop-blur-xl border border-white/10"
+              className="lg:hidden p-1.5 sm:p-2 rounded-xl bg-secondary/80 hover:bg-accent/80 active:bg-accent/90 transition-colors relative backdrop-blur-xl border border-white/10 min-w-[40px] min-h-[40px] flex items-center justify-center"
               aria-label="Toggle filters"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               {((filters.companies.length > 0) || (filters.difficulties.length > 0) || filters.showMostFrequent) && (
@@ -257,6 +360,7 @@ export default function Home() {
               )}
             </button>
             <ThemeToggle />
+            <AuthButton />
           </div>
         </div>
       </header>
@@ -276,10 +380,10 @@ export default function Home() {
               />
             )}
             {/* Filters Panel */}
-            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card/80 backdrop-blur-2xl border-r lg:border-r-0 lg:border border-white/15 dark:border-white/10 shadow-xl lg:shadow-lg overflow-y-auto lg:max-h-[calc(100vh-7rem)] transform transition-transform duration-300 ease-in-out ${
+            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card/90 lg:bg-transparent backdrop-blur-2xl lg:backdrop-blur-0 border-r border-white/15 dark:border-white/10 lg:border-none shadow-xl lg:shadow-none overflow-y-auto lg:max-h-[calc(100vh-7rem)] transform transition-transform duration-300 ease-in-out ${
               filtersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             }`}>
-              <div className="sticky top-0 bg-card/80 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between lg:hidden">
+              <div className="sticky top-0 bg-card/90 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between lg:hidden">
                 <h2 className="text-lg font-bold">Filters</h2>
                 <button
                   onClick={() => setFiltersOpen(false)}
@@ -370,7 +474,15 @@ export default function Home() {
               <>
                 <div className="space-y-3 sm:space-y-4">
                   {paginatedQuestions.map((question, index) => (
-                    <QuestionCard key={`${question.id}-${startIndex + index}`} question={question} />
+                    <QuestionCard
+                      key={`${question.id}-${startIndex + index}`}
+                      question={question}
+                      isAuthenticated={!!session}
+                      done={questionStates[question.id]?.done ?? false}
+                      note={questionStates[question.id]?.note ?? ''}
+                      onToggleDone={(done) => handleToggleDone(question.id, done)}
+                      onChangeNote={(note) => handleUpdateNote(question.id, note)}
+                    />
                   ))}
                 </div>
 

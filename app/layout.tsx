@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/components/auth-provider';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
@@ -21,17 +22,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="min-h-screen flex flex-col bg-background text-foreground">
-            <main className="flex-1 flex flex-col">
-              {children}
-            </main>
-            <footer className="border-t border-white/10 bg-card/75 backdrop-blur-2xl supports-[backdrop-filter]:bg-card/50">
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <div className="min-h-screen flex flex-col bg-background text-foreground">
+              <main className="flex-1 flex flex-col">
+                {children}
+              </main>
+              <footer className="border-t border-white/10 bg-card/75 backdrop-blur-2xl supports-[backdrop-filter]:bg-card/50">
               <div className="container mx-auto px-4 py-4 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-muted-foreground">
                 <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-3 text-center sm:text-left">
                   <span className="font-medium text-foreground/80">
@@ -78,10 +80,11 @@ export default function RootLayout({
                     <span>Buy me a coffee</span>
                   </a>
                 </div>
-              </div>
-            </footer>
-          </div>
-        </ThemeProvider>
+                </div>
+              </footer>
+            </div>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );
