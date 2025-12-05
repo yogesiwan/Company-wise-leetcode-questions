@@ -72,17 +72,11 @@ export function QuestionCard({
   return (
     <>
       <div
-        className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card/95 via-card/90 to-background/90 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-0.5 ${
-          done
-            ? 'border-emerald-500/40 ring-1 ring-emerald-500/40'
-            : `border-border/70 ring-1 ring-border/40 ${getDifficultyHoverBorder(question.difficulty)}`
-        }`}
+        className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card/95 via-card/90 to-background/90 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-0.5 ${getDifficultyHoverBorder(question.difficulty)}`}  
       >
         {/* Accent strip for quick scanning */}
         <div
-          className={`pointer-events-none absolute inset-y-0 left-0 w-1 sm:w-1.5 bg-gradient-to-b opacity-90 ${done
-              ? 'from-emerald-400/80 via-emerald-500/70 to-emerald-400/60'
-              : question.difficulty === 'Hard'
+          className={`pointer-events-none absolute inset-y-0 left-0 w-1 sm:w-1.5 bg-gradient-to-b opacity-90 ${question.difficulty === 'Hard'
                 ? 'from-red-400/80 via-red-500/70 to-orange-400/70'
                 : question.difficulty === 'Medium'
                   ? 'from-yellow-400/80 via-amber-400/70 to-orange-400/70'
@@ -105,15 +99,13 @@ export function QuestionCard({
               <button
                 type="button"
                 onClick={() => onToggleDone && onToggleDone(!done)}
-                className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] transition ${done
-                  ? 'bg-emerald-500/15 border-emerald-500/70 text-emerald-600 dark:text-emerald-300'
-                  : 'bg-card/80 border-border/70 text-muted-foreground hover:text-foreground'
+                className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-[11px] 'bg-card/80 border-border/70 text-muted-foreground hover:text-foreground'
                   }`}
                 aria-label={done ? 'Mark as not done' : 'Mark as done'}
               >
                 {done ? (
                   // Checked square
-                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth={2}>
                     <rect x="4" y="4" width="16" height="16" rx="2" ry="2" strokeWidth={2} />
                     <path
                       strokeLinecap="round"
@@ -203,13 +195,13 @@ export function QuestionCard({
                       <span
                         key={`${company}-pill-${idx}`}
                         title={company}
-                        className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2 py-0.5 text-[10px] font-medium text-primary shadow-sm dark:bg-white dark:text-black"
+                        className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2 py-0.5 text-[10px] font-medium text-primary shadow-sm dark:bg-gray-300 dark:text-black"
                       >
                         <span className="max-w-[70px] truncate">{company}</span>
                       </span>
                     ))}
                     {companiesToShow.length > 3 && (
-                      <span className="inline-flex items-center justify-center rounded-full border border-primary/25 bg-white px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm dark:text-black">
+                      <span className="inline-flex items-center justify-center rounded-full border border-primary/25 bg-white px-2 py-0.5 text-[10px] font-semibold text-primary shadow-sm dark:bg-gray-300 dark:text-black">
                         +{companiesToShow.length - 3}
                       </span>
                     )}
@@ -228,7 +220,7 @@ export function QuestionCard({
                     <span
                       key={`${company}-${idx}`}
                       title={company}
-                      className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2.5 py-1 text-[11px] sm:text-xs font-medium text-primary shadow-sm dark:bg-white dark:text-black"
+                      className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2.5 py-1 text-[11px] sm:text-xs font-medium text-primary shadow-sm dark:bg-gray-300 dark:text-black"
                     >
                       <span className="truncate max-w-[160px]">{company}</span>
                     </span>
