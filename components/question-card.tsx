@@ -12,7 +12,7 @@ interface QuestionCardProps {
   onChangeNote?: (note: string) => void;
 }
 
-export function QuestionCard({
+export const QuestionCard = React.memo(function QuestionCard({
   question,
   isAuthenticated,
   done = false,
@@ -21,7 +21,8 @@ export function QuestionCard({
   onChangeNote,
 }: QuestionCardProps) {
 
-  const getDifficultyHoverBorder = (difficulty: string) => {
+  // Memoize difficulty styling functions
+  const getDifficultyHoverBorder = React.useCallback((difficulty: string) => {
     switch (difficulty) {
       case 'Easy':
         return 'hover:border-green-500/60 hover:ring-1 hover:ring-green-500/40';
@@ -32,9 +33,9 @@ export function QuestionCard({
       default:
         return 'hover:border-gray-500/60 hover:ring-1 hover:ring-gray-500/40';
     }
-  };
+  }, []);
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = React.useCallback((difficulty: string) => {
     switch (difficulty) {
       case 'Easy':
         return 'bg-green-500/20 text-green-600 dark:text-green-400';
@@ -45,10 +46,23 @@ export function QuestionCard({
       default:
         return 'bg-gray-500/20 text-gray-600 dark:text-gray-400';
     }
-  };
+  }, []);
 
-  // Get companies to display as tags
-  const companiesToShow = question.companyTags || (question.company ? [question.company] : []);
+  const difficultyHoverBorder = React.useMemo(
+    () => getDifficultyHoverBorder(question.difficulty),
+    [getDifficultyHoverBorder, question.difficulty]
+  );
+
+  const difficultyColor = React.useMemo(
+    () => getDifficultyColor(question.difficulty),
+    [getDifficultyColor, question.difficulty]
+  );
+
+  // Get companies to display as tags - memoized
+  const companiesToShow = React.useMemo(
+    () => question.companyTags || (question.company ? [question.company] : []),
+    [question.companyTags, question.company]
+  );
 
   const [localNote, setLocalNote] = React.useState(note);
   const [isNoteOpen, setIsNoteOpen] = React.useState(false);
@@ -58,25 +72,25 @@ export function QuestionCard({
     setLocalNote(note);
   }, [note]);
 
-  const commitNote = () => {
+  const commitNote = React.useCallback(() => {
     if (onChangeNote && localNote !== note) {
       onChangeNote(localNote);
     }
-  };
+  }, [onChangeNote, localNote, note]);
 
-  const closeNote = () => {
+  const closeNote = React.useCallback(() => {
     commitNote();
     setIsNoteOpen(false);
-  };
+  }, [commitNote]);
 
   return (
     <>
       <div
-        className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card/95 via-card/90 to-background/90 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-0.5 ${getDifficultyHoverBorder(question.difficulty)}`}  
+        className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card/95 via-card/90 to-background/90 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-0.5 ${difficultyHoverBorder}`}  
       >
         {/* Accent strip for quick scanning */}
         <div
-          className={`pointer-events-none absolute inset-y-0 left-0 w-1 sm:w-1.5 bg-gradient-to-b opacity-90 ${question.difficulty === 'Hard'
+          className={`pointer-events-none absolute inset-y-0 left-0 w-1 sm:w-0.1 bg-gradient-to-b opacity-90 ${question.difficulty === 'Hard'
                 ? 'from-red-400/80 via-red-500/70 to-orange-400/70'
                 : question.difficulty === 'Medium'
                   ? 'from-yellow-400/80 via-amber-400/70 to-orange-400/70'
@@ -145,9 +159,7 @@ export function QuestionCard({
                 </>
               )}
               <span
-                className={`px-2.5 sm:px-2 py-1 rounded-full text-[11px] sm:text-xs font-medium whitespace-nowrap shadow-sm ${getDifficultyColor(
-                  question.difficulty,
-                )}`}
+                className={`px-2.5 sm:px-2 py-1 rounded-full text-[11px] sm:text-xs font-medium whitespace-nowrap shadow-sm ${difficultyColor}`}
               >
                 {question.difficulty}
               </span>
@@ -195,9 +207,9 @@ export function QuestionCard({
                       <span
                         key={`${company}-pill-${idx}`}
                         title={company}
-                        className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2 py-0.5 text-[10px] font-medium text-primary shadow-sm dark:bg-gray-300 dark:text-black"
+                        className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2 py-0.5 text-[10px] font-medium text-primary shadow-sm dark:bg-gray-300 dark:text-black max-w-[60px] sm:max-w-[80px]"
                       >
-                        <span className="max-w-[70px] truncate">{company}</span>
+                        <span className="truncate">{company}</span>
                       </span>
                     ))}
                     {companiesToShow.length > 3 && (
@@ -212,7 +224,7 @@ export function QuestionCard({
 
               {/* Expanded list with smooth animation */}
               <div
-                className={`overflow-hidden transition-all duration-300 ease-out ${showAllCompanies ? 'max-h-[500px] opacity-100 mt-2' : 'max-h-0 opacity-0'
+                className={`transition-all duration-300 ease-out ${showAllCompanies ? 'max-h-[70vh] sm:max-h-[600px] opacity-100 mt-2 overflow-y-auto' : 'max-h-0 opacity-0 overflow-hidden'
                   }`}
               >
                 <div className="flex flex-wrap gap-1.5 sm:gap-2 pb-1">
@@ -220,9 +232,9 @@ export function QuestionCard({
                     <span
                       key={`${company}-${idx}`}
                       title={company}
-                      className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2.5 py-1 text-[11px] sm:text-xs font-medium text-primary shadow-sm dark:bg-gray-300 dark:text-black"
+                      className="inline-flex items-center rounded-full border border-primary/25 bg-white px-2.5 py-1 text-[11px] sm:text-xs font-medium text-primary shadow-sm dark:bg-gray-300 dark:text-black max-w-[calc(100vw-4rem)] sm:max-w-[200px] md:max-w-[250px]"
                     >
-                      <span className="truncate max-w-[160px]">{company}</span>
+                      <span className="truncate">{company}</span>
                     </span>
                   ))}
                 </div>
@@ -308,5 +320,5 @@ export function QuestionCard({
       )}
     </>
   );
-}
+});
 

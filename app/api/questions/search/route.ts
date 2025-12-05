@@ -43,10 +43,14 @@ export async function GET(request: NextRequest) {
       })
       .slice(0, MAX_RESULTS);
 
+    // Set caching headers for search results
+    const headers = new Headers();
+    headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
+
     return NextResponse.json({
       questions: results,
       totalCount: results.length,
-    });
+    }, { headers });
   } catch (error) {
     console.error('Error performing global question search:', error);
     return NextResponse.json(

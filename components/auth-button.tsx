@@ -6,6 +6,8 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 export function AuthButton() {
   const { data: session, status } = useSession();
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
 
   // Close menu on escape
   React.useEffect(() => {
@@ -19,12 +21,40 @@ export function AuthButton() {
     return () => window.removeEventListener('keydown', handler);
   }, [menuOpen]);
 
+  // Close menu when clicking outside
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
+  // Reset signing in state when session changes
+  React.useEffect(() => {
+    if (session?.user && isSigningIn) {
+      setIsSigningIn(false);
+    }
+  }, [session, isSigningIn]);
+
+  // Timeout fallback to reset signing in state after 10 seconds
+  React.useEffect(() => {
+    if (!isSigningIn) return;
+    const timeout = setTimeout(() => {
+      setIsSigningIn(false);
+    }, 10000); // 10 second timeout
+    return () => clearTimeout(timeout);
+  }, [isSigningIn]);
+
   const isLoading = status === 'loading';
   const user = session?.user;
 
   if (isLoading) {
     return (
-      <div className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-card/70">
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/70">
         <span className="inline-flex h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/60 border-t-transparent" />
       </div>
     );
@@ -35,24 +65,37 @@ export function AuthButton() {
       <button
         type="button"
         onClick={() => {
+          setIsSigningIn(true);
           void signIn('google');
         }}
-        className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/70 px-3 py-1.5 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-card/90 transition shadow-sm"
+        disabled={isSigningIn}
+        className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card/70 px-3 py-2.5 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-card/90 transition shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[10px] text-primary">
-          G
-        </span>
-        <span>Sign in</span>
+        {isSigningIn ? (
+          <>
+            <span className="inline-flex h-5 w-5 items-center justify-center">
+              <span className="inline-flex h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/60 border-t-transparent" />
+            </span>
+            <span>Signing in...</span>
+          </>
+        ) : (
+          <>
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[13px] text-primary">
+              G
+            </span>
+            <span>Sign in</span>
+          </>
+        )}
       </button>
     );
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
         type="button"
         onClick={() => setMenuOpen((open) => !open)}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-card/80 text-[11px] font-semibold text-primary uppercase hover:bg-card/95 transition shadow-sm"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/80 text-[16px] font-semibold text-primary uppercase hover:bg-card/95 transition shadow-sm"
         aria-label="Open account menu"
       >
         {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}

@@ -9,7 +9,7 @@ interface FiltersProps {
   onFiltersChange: (filters: FilterOptions) => void;
 }
 
-export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
+export const Filters = React.memo(function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
   const [companySearch, setCompanySearch] = React.useState('');
   const [minFrequencyInput, setMinFrequencyInput] = React.useState(
     filters.minFrequency !== undefined ? String(filters.minFrequency) : ''
@@ -26,7 +26,7 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
     setMaxFrequencyInput(filters.maxFrequency !== undefined ? String(filters.maxFrequency) : '');
   }, [filters.maxFrequency]);
 
-  const commitFrequencyValue = (type: 'min' | 'max') => {
+  const commitFrequencyValue = React.useCallback((type: 'min' | 'max') => {
     const value = type === 'min' ? minFrequencyInput : maxFrequencyInput;
     const parsed = value.trim() === '' ? undefined : parseFloat(value);
     if (Number.isNaN(parsed)) {
@@ -40,40 +40,43 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
     }
 
     onFiltersChange({ ...filters, [key]: parsed } as FilterOptions);
-  };
+  }, [minFrequencyInput, maxFrequencyInput, filters, onFiltersChange]);
 
-  const handleCompanyToggle = (companyName: string) => {
+  const handleCompanyToggle = React.useCallback((companyName: string) => {
     const newCompanies = filters.companies.includes(companyName)
       ? filters.companies.filter(c => c !== companyName)
       : [...filters.companies, companyName];
 
     onFiltersChange({ ...filters, companies: newCompanies });
-  };
+  }, [filters, onFiltersChange]);
 
-  const handleRemoveCompany = (companyName: string) => {
+  const handleRemoveCompany = React.useCallback((companyName: string) => {
     const newCompanies = filters.companies.filter(c => c !== companyName);
     onFiltersChange({ ...filters, companies: newCompanies });
-  };
+  }, [filters, onFiltersChange]);
 
-  const handleDifficultyToggle = (difficulty: string) => {
+  const handleDifficultyToggle = React.useCallback((difficulty: string) => {
     const newDifficulties = filters.difficulties.includes(difficulty)
       ? filters.difficulties.filter(d => d !== difficulty)
       : [...filters.difficulties, difficulty];
 
     onFiltersChange({ ...filters, difficulties: newDifficulties });
-  };
+  }, [filters, onFiltersChange]);
 
-  const handleMostFrequentToggle = () => {
+  const handleMostFrequentToggle = React.useCallback(() => {
     onFiltersChange({ ...filters, showMostFrequent: !filters.showMostFrequent });
-  };
+  }, [filters, onFiltersChange]);
 
-  const handleMultiCompanyModeChange = (mode: 'union' | 'intersection') => {
+  const handleMultiCompanyModeChange = React.useCallback((mode: 'union' | 'intersection') => {
     onFiltersChange({ ...filters, multiCompanyMode: mode });
-  };
+  }, [filters, onFiltersChange]);
 
-  // Filter companies based on search
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(companySearch.toLowerCase())
+  // Filter companies based on search - memoized
+  const filteredCompanies = React.useMemo(
+    () => companies.filter(company =>
+      company.name.toLowerCase().includes(companySearch.toLowerCase())
+    ),
+    [companies, companySearch]
   );
 
   return (
@@ -316,4 +319,4 @@ export function Filters({ companies, filters, onFiltersChange }: FiltersProps) {
       </div>
     </div>
   );
-}
+});

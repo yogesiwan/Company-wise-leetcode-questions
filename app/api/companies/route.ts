@@ -7,6 +7,10 @@ export async function GET() {
   try {
     const companies = getAllCompanies();
     
+    // Set caching headers for better performance
+    const headers = new Headers();
+    headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    
     // Only log in development or if there's an issue
     if (companies.length === 0) {
       const dataDir = path.join(process.cwd(), 'data');
@@ -58,7 +62,7 @@ export async function GET() {
       availablePeriods: getCompanyTimePeriods(company),
     }));
 
-    return NextResponse.json({ companies: companiesWithPeriods });
+    return NextResponse.json({ companies: companiesWithPeriods }, { headers });
   } catch (error) {
     console.error('Error fetching companies:', error);
     return NextResponse.json(

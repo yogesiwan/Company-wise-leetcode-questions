@@ -2,16 +2,26 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Filters } from '@/components/filters';
 import { QuestionCard } from '@/components/question-card';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Pagination } from '@/components/pagination';
 import { FilterOptions, LeetCodeQuestion } from '@/types';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { AuthButton } from '@/components/auth-button';
 
+// Dynamic import for code splitting - Pagination is only needed when there are questions
+const Pagination = dynamic(() => import('@/components/pagination').then(mod => ({ default: mod.Pagination })), {
+  ssr: false,
+});
+
 export default function AppPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS
+  // This ensures hooks are called in the same order on every render
   const [companies, setCompanies] = React.useState<Array<{ name: string; availablePeriods: string[] }>>([]);
   const [allQuestions, setAllQuestions] = React.useState<LeetCodeQuestion[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -32,6 +42,25 @@ export default function AppPage() {
   const [questionStates, setQuestionStates] = React.useState<
     Record<string, { done: boolean; note: string }>
   >({});
+
+  // Calculate derived values (needed for hooks)
+  const trimmedSearchQuery = searchQuery.trim();
+  const isSearchActive = trimmedSearchQuery.length >= 2;
+  const activeQuestions = isSearchActive ? searchResults : allQuestions;
+  const totalPages = Math.ceil(activeQuestions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedQuestions = activeQuestions.slice(startIndex, endIndex);
+
+  // ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS
+  // Redirect to home if not authenticated
+  React.useEffect(() => {
+    if (status === 'loading') return; // Wait for auth check
+    
+    if (!session?.user) {
+      router.push('/');
+    }
+  }, [session, status, router]);
 
   // Load companies on mount
   React.useEffect(() => {
@@ -137,38 +166,6 @@ export default function AppPage() {
     };
   }, [searchQuery]);
 
-  const trimmedSearchQuery = searchQuery.trim();
-  const isSearchActive = trimmedSearchQuery.length >= 2;
-  const activeQuestions = isSearchActive ? searchResults : allQuestions;
-  const activeLoading = isSearchActive ? searchLoading : loading;
-  const activeError = isSearchActive ? searchError : error;
-  const defaultHeading = filters.showMostFrequent
-    ? 'Most Frequent Questions'
-    : filters.companies.length > 1
-      ? `${filters.multiCompanyMode === 'intersection' ? 'Common' : 'All'} Questions (${filters.companies.length} companies)`
-      : filters.companies.length === 1
-        ? `Questions for ${filters.companies[0]}`
-        : 'Select a company to view questions';
-  const questionHeading = isSearchActive
-    ? `Search results for "${trimmedSearchQuery}"`
-    : defaultHeading;
-  const questionCountLabel = isSearchActive
-    ? `${activeQuestions.length} match${activeQuestions.length !== 1 ? 'es' : ''}`
-    : `${activeQuestions.length} question${activeQuestions.length !== 1 ? 's' : ''}`;
-  const emptyStateMessage = isSearchActive
-    ? `No questions found for "${trimmedSearchQuery}"`
-    : filters.showMostFrequent || filters.companies.length > 0
-      ? 'No questions found matching your filters'
-      : 'Please select at least one company or enable "Most Frequent Questions"';
-
-  // Calculate pagination
-  const totalPages = Math.ceil(activeQuestions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedQuestions = activeQuestions.slice(startIndex, endIndex);
-  const showingFrom = activeQuestions.length > 0 ? startIndex + 1 : 0;
-  const showingTo = Math.min(endIndex, activeQuestions.length);
-
   // Reset to first page if current page is out of bounds
   React.useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -179,6 +176,12 @@ export default function AppPage() {
   React.useEffect(() => {
     setCurrentPage(1);
   }, [isSearchActive]);
+
+  // Memoize question IDs for dependency array
+  const questionIdsString = React.useMemo(
+    () => paginatedQuestions.map((q) => q.id).join(','),
+    [paginatedQuestions]
+  );
 
   // Load user question states for currently visible questions
   React.useEffect(() => {
@@ -201,14 +204,16 @@ export default function AppPage() {
         }
         const data = await res.json();
         if (aborted) return;
-        const nextStates: Record<string, { done: boolean; note: string }> = { ...questionStates };
-        for (const state of data.states || []) {
-          nextStates[state.questionId] = {
-            done: !!state.done,
-            note: state.note ?? '',
-          };
-        }
-        setQuestionStates(nextStates);
+        setQuestionStates((prevStates) => {
+          const nextStates: Record<string, { done: boolean; note: string }> = { ...prevStates };
+          for (const state of data.states || []) {
+            nextStates[state.questionId] = {
+              done: !!state.done,
+              note: state.note ?? '',
+            };
+          }
+          return nextStates;
+        });
       } catch (err) {
         if (!aborted) {
           console.error('Error fetching user question states', err);
@@ -221,10 +226,69 @@ export default function AppPage() {
     return () => {
       aborted = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, paginatedQuestions.map((q) => q.id).join(',')]);
+  }, [session, questionIdsString]);
 
-  const handleToggleDone = async (questionId: string, nextDone: boolean) => {
+  // Show loading state while checking auth or redirecting
+  if (status === 'loading' || !session?.user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card/70">
+            <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-primary/60 border-t-transparent" />
+          </div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate remaining derived values for rendering - memoized
+  const activeLoading = React.useMemo(
+    () => isSearchActive ? searchLoading : loading,
+    [isSearchActive, searchLoading, loading]
+  );
+  const activeError = React.useMemo(
+    () => isSearchActive ? searchError : error,
+    [isSearchActive, searchError, error]
+  );
+  const defaultHeading = React.useMemo(() => {
+    if (filters.showMostFrequent) return 'Most Frequent Questions';
+    if (filters.companies.length > 1) {
+      return `${filters.multiCompanyMode === 'intersection' ? 'Common' : 'All'} Questions (${filters.companies.length} companies)`;
+    }
+    if (filters.companies.length === 1) {
+      return `Questions for ${filters.companies[0]}`;
+    }
+    return 'Select a company to view questions';
+  }, [filters.showMostFrequent, filters.companies.length, filters.multiCompanyMode, filters.companies]);
+  const questionHeading = React.useMemo(
+    () => isSearchActive ? `Search results for "${trimmedSearchQuery}"` : defaultHeading,
+    [isSearchActive, trimmedSearchQuery, defaultHeading]
+  );
+  const questionCountLabel = React.useMemo(
+    () => isSearchActive
+      ? `${activeQuestions.length} match${activeQuestions.length !== 1 ? 'es' : ''}`
+      : `${activeQuestions.length} question${activeQuestions.length !== 1 ? 's' : ''}`,
+    [isSearchActive, activeQuestions.length]
+  );
+  const emptyStateMessage = React.useMemo(
+    () => isSearchActive
+      ? `No questions found for "${trimmedSearchQuery}"`
+      : filters.showMostFrequent || filters.companies.length > 0
+        ? 'No questions found matching your filters'
+        : 'Please select at least one company or enable "Most Frequent Questions"',
+    [isSearchActive, trimmedSearchQuery, filters.showMostFrequent, filters.companies.length]
+  );
+  const showingFrom = React.useMemo(
+    () => activeQuestions.length > 0 ? startIndex + 1 : 0,
+    [activeQuestions.length, startIndex]
+  );
+  const showingTo = React.useMemo(
+    () => Math.min(endIndex, activeQuestions.length),
+    [endIndex, activeQuestions.length]
+  );
+
+  const handleToggleDone = React.useCallback(async (questionId: string, nextDone: boolean) => {
     if (!session) return;
     setQuestionStates((prev) => ({
       ...prev,
@@ -249,9 +313,9 @@ export default function AppPage() {
       console.error('Failed to update done state', err);
       // Optionally revert on error
     }
-  };
+  }, [session]);
 
-  const handleUpdateNote = async (questionId: string, note: string) => {
+  const handleUpdateNote = React.useCallback(async (questionId: string, note: string) => {
     if (!session) return;
     setQuestionStates((prev) => ({
       ...prev,
@@ -276,7 +340,7 @@ export default function AppPage() {
       console.error('Failed to update note', err);
       // keep optimistic UI; errors only logged
     }
-  };
+  }, [session]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -287,13 +351,31 @@ export default function AppPage() {
         <div className="container mx-auto px-4 py-3 sm:py-4 flex flex-wrap items-center gap-3 relative">
           <div className="min-w-0 flex-1">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 flex items-center justify-center">
-                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <div className="h-12 w-12 flex items-center justify-center">
+                <svg
+                  className="w-14 h-14 text-black"
+                  viewBox="0 0 64 64"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M24 22L16 32l8 10M40 22l8 10-8 10"
+                    stroke="currentColor"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M33 20l-4 24"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                LeetCode Prep
+                DeCodeIt
               </span>
             </Link>
           </div>
@@ -510,3 +592,4 @@ export default function AppPage() {
     </div>
   );
 }
+

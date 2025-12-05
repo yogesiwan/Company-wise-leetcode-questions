@@ -27,10 +27,14 @@ export async function POST(request: NextRequest) {
     // Get filtered questions
     const result = getFilteredQuestions(options);
 
+    // Set caching headers (shorter cache for dynamic queries)
+    const headers = new Headers();
+    headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+
     return NextResponse.json({
       questions: result.questions,
       totalCount: result.totalCount,
-    });
+    }, { headers });
   } catch (error) {
     console.error('Error fetching questions:', error);
     return NextResponse.json(
@@ -39,6 +43,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 
 
 

@@ -1,5 +1,7 @@
 'use client';
 
+import * as React from 'react';
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -11,7 +13,7 @@ interface PaginationProps {
   showingTo: number;
 }
 
-export function Pagination({
+export const Pagination = React.memo(function Pagination({
   currentPage,
   totalPages,
   onPageChange,
@@ -21,7 +23,7 @@ export function Pagination({
   showingFrom,
   showingTo,
 }: PaginationProps) {
-  const getPageNumbers = () => {
+  const getPageNumbers = React.useCallback(() => {
     const pages: (number | string)[] = [];
     const maxVisible = 7;
 
@@ -55,7 +57,7 @@ export function Pagination({
     }
 
     return pages;
-  };
+  }, [currentPage, totalPages]);
 
   return (
     <div className="flex flex-col gap-4 mt-6 pt-4 border-t border-border">
@@ -148,5 +150,5 @@ export function Pagination({
       )}
     </div>
   );
-}
+});
 

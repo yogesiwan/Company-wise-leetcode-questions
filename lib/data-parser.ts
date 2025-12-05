@@ -2,6 +2,16 @@ import { LeetCodeQuestion, CompanyData } from '@/types';
 import fs from 'fs';
 import path from 'path';
 
+// In-memory cache for parsed data (cleared on server restart)
+const cache = {
+  companies: null as string[] | null,
+  companyData: new Map<string, { data: CompanyData; timestamp: number }>(),
+  allQuestions: null as LeetCodeQuestion[] | null,
+  mostFrequent: null as Array<LeetCodeQuestion & { companyTags?: string[] }> | null,
+};
+
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour cache TTL
+
 // Get data directory - handle both local and Vercel environments
 function getDataDir(): string {
   const cwd = process.cwd();
@@ -147,8 +157,14 @@ function parseCompanyCSV(companyName: string, fileName: string): LeetCodeQuestio
 /**
  * Get all company names from the data directory
  * Filters out hidden directories (starting with .) and ensures directory contains CSV files
+ * Uses caching for performance
  */
 export function getAllCompanies(): string[] {
+  // Return cached result if available
+  if (cache.companies !== null) {
+    return cache.companies;
+  }
+
   const dataDir = getDataDir();
   
   if (!fs.existsSync(dataDir)) {
@@ -183,6 +199,8 @@ export function getAllCompanies(): string[] {
     .map(entry => entry.name)
     .sort();
   
+  // Cache the result
+  cache.companies = companies;
   return companies;
 }
 
@@ -273,8 +291,14 @@ export function loadMultipleCompaniesData(companyNames: string[], timePeriod?: s
 
 /**
  * Get all questions from all companies (for most frequent questions analysis)
+ * Uses caching for performance
  */
 export function getAllQuestions(): LeetCodeQuestion[] {
+  // Return cached result if available
+  if (cache.allQuestions !== null) {
+    return cache.allQuestions;
+  }
+
   const companies = getAllCompanies();
   const allQuestions: LeetCodeQuestion[] = [];
 
@@ -283,6 +307,8 @@ export function getAllQuestions(): LeetCodeQuestion[] {
     allQuestions.push(...companyData.questions);
   }
 
+  // Cache the result
+  cache.allQuestions = allQuestions;
   return allQuestions;
 }
 
@@ -302,6 +328,17 @@ export function getAllQuestions(): LeetCodeQuestion[] {
 export function getMostFrequentQuestions(
   minCompanies: number = 2
 ): Array<LeetCodeQuestion & { companyTags?: string[] }> {
+  // Use cache key based on minCompanies
+  const cacheKey = `mostFrequent:${minCompanies}`;
+  
+  // Return cached result if available
+  if (cache.mostFrequent !== null && cache.mostFrequent.length > 0) {
+    // Verify it matches the minCompanies requirement (default is 2)
+    if (minCompanies === 2) {
+      return cache.mostFrequent;
+    }
+  }
+
   const companies = getAllCompanies();
   const questionMap = new Map<
     string,
@@ -352,7 +389,7 @@ export function getMostFrequentQuestions(
   // Sort by:
   // 1) Number of companies this question appears in (descending)
   // 2) Aggregated frequency (descending)
-  return frequentQuestions.sort((a, b) => {
+  const result = frequentQuestions.sort((a, b) => {
     const aCompanies = a.companyTags?.length ?? 0;
     const bCompanies = b.companyTags?.length ?? 0;
 
@@ -366,5 +403,12 @@ export function getMostFrequentQuestions(
 
     return a.title.localeCompare(b.title);
   });
+
+  // Cache the result (only for default minCompanies=2)
+  if (minCompanies === 2) {
+    cache.mostFrequent = result;
+  }
+  
+  return result;
 }
 

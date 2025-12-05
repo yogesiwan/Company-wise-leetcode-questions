@@ -2,15 +2,38 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { AuthButton } from './auth-button';
 import { ThemeToggle } from './theme-toggle';
+import { useToast } from './toast';
 
 export function LandingPage() {
   const [mounted, setMounted] = React.useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { addToast } = useToast();
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleStartPreparing = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (status === 'loading') {
+      e.preventDefault();
+      return;
+    }
+
+    if (!session?.user) {
+      e.preventDefault();
+      addToast({
+        message: 'Log in first.',
+        type: 'info',
+        duration: 2500,
+      });
+    }
+    // If logged in, allow default Link navigation
+  };
 
   const features = [
     {
@@ -70,9 +93,9 @@ export function LandingPage() {
   ];
 
   const stats = [
-    { label: 'Companies', value: '100+', subtext: 'Supported' },
-    { label: 'Questions', value: '2000+', subtext: 'Scraped' },
-    { label: 'Updated', value: 'Nov 2025', subtext: 'Latest data' },
+    { label: 'Companies', value: '100+'},
+    { label: 'Questions', value: '2000+'},
+    { label: 'Updated', value: 'Nov 2025'},
   ];
 
   return (
@@ -82,18 +105,36 @@ export function LandingPage() {
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="container mx-auto px-3 sm:px-4 py-2.5 sm:py-3 md:py-4">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <span className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent truncate">
-                  LeetCode Prep
-                </span>
+          <div className="min-w-0 flex-1">
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="h-12 w-12 flex items-center justify-center">
+                <svg
+                  className="w-14 h-14 text-black"
+                  viewBox="0 0 64 64"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M24 22L16 32l8 10M40 22l8 10-8 10"
+                    stroke="currentColor"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M33 20l-4 24"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
-            </div>
+              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                DeCodeIt
+              </span>
+            </Link>
+          </div>
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
               <ThemeToggle />
               <AuthButton />
@@ -140,6 +181,7 @@ export function LandingPage() {
             <div className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 md:gap-4 mb-8 sm:mb-12 md:mb-16 px-2 sm:px-0 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <Link
                 href="/main"
+                onClick={handleStartPreparing}
                 className="group inline-flex items-center justify-center gap-2 px-5 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 rounded-xl bg-primary text-primary-foreground font-semibold text-sm sm:text-base min-h-[44px] sm:min-h-[48px] shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 touch-manipulation w-full sm:w-auto"
               >
                 <span>Start Preparing</span>
@@ -158,9 +200,6 @@ export function LandingPage() {
                   </div>
                   <div className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">
                     {stat.label}
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground/70 mt-0.5">
-                    {stat.subtext}
                   </div>
                 </div>
               ))}
