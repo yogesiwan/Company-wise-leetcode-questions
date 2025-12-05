@@ -11,7 +11,8 @@ let clientPromise: Promise<MongoClient> | null = null;
 
 export async function getMongoClient(): Promise<MongoClient> {
   if (!clientPromise) {
-    client = new MongoClient(uri);
+    // uri is guaranteed to be defined due to check at module level
+    client = new MongoClient(uri!);
     clientPromise = client.connect();
   }
   return clientPromise;
