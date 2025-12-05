@@ -105,13 +105,14 @@ export async function PATCH(request: NextRequest) {
       },
     );
 
-    const doc = result.value;
-    if (!doc) {
+    if (!result || !result.value) {
       return NextResponse.json(
         { error: 'Failed to update state' },
         { status: 500 },
       );
     }
+
+    const doc = result.value;
 
     return NextResponse.json({
       questionId: doc.questionId,
