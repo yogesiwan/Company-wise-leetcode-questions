@@ -103,16 +103,19 @@ export async function PATCH(request: NextRequest) {
         upsert: true,
         returnDocument: 'after',
       },
-    );
+    ) as { value: UserQuestionState | null } | UserQuestionState | null;
 
-    if (!result || !result.value) {
+    // Handle ModifyResult type (has value property) or direct document
+    const doc = result && typeof result === 'object' && 'value' in result
+      ? result.value
+      : result;
+    
+    if (!doc) {
       return NextResponse.json(
         { error: 'Failed to update state' },
         { status: 500 },
       );
     }
-
-    const doc = result.value;
 
     return NextResponse.json({
       questionId: doc.questionId,
