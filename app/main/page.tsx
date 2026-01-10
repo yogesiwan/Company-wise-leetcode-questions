@@ -466,10 +466,10 @@ export default function AppPage() {
               />
             )}
             {/* Filters Panel */}
-            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card/90 lg:bg-transparent backdrop-blur-2xl lg:backdrop-blur-0 border-r border-white/15 dark:border-white/10 lg:border-none shadow-xl lg:shadow-none overflow-y-auto lg:max-h-[calc(100vh-7rem)] transform transition-transform duration-300 ease-in-out ${
+            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card/90 lg:bg-transparent backdrop-blur-2xl lg:backdrop-blur-0 border-r border-white/15 dark:border-white/10 lg:border-none shadow-xl lg:shadow-none flex flex-col lg:block lg:max-h-[calc(100vh-7rem)] transform transition-transform duration-300 ease-in-out ${
               filtersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             }`}>
-              <div className="sticky top-0 bg-card/90 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between lg:hidden">
+              <div className="sticky top-0 bg-card/90 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between lg:hidden flex-shrink-0 z-10">
                 <h2 className="text-lg font-bold">Filters</h2>
                 <button
                   onClick={() => setFiltersOpen(false)}
@@ -481,14 +481,16 @@ export default function AppPage() {
                   </svg>
                 </button>
               </div>
-              <Filters
-                companies={companies}
-                filters={filters}
-                onFiltersChange={(newFilters) => {
-                  setFilters(newFilters);
-                  // Filters panel stays open until user manually closes it
-                }}
-              />
+              <div className="flex-1 overflow-y-auto overscroll-contain lg:overflow-visible pb-8 lg:pb-0">
+                <Filters
+                  companies={companies}
+                  filters={filters}
+                  onFiltersChange={(newFilters) => {
+                    setFilters(newFilters);
+                    // Filters panel stays open until user manually closes it
+                  }}
+                />
+              </div>
             </div>
           </div>
 
