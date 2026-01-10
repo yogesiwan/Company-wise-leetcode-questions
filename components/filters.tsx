@@ -182,31 +182,32 @@ export const Filters = React.memo(function Filters({ companies, filters, onFilte
                 <label className="block font-medium text-xs sm:text-sm text-muted-foreground/90">
                   Multi-Company Mode
                 </label>
-                <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
-                  <label className="flex items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1 rounded-full px-2 sm:px-3 border border-transparent hover:border-border/70 transition-colors">
+                <div className="flex flex-col gap-2">
+                  <label className={`flex items-center space-x-3 cursor-pointer touch-manipulation p-2 rounded-lg border transition-all ${filters.multiCompanyMode === 'union' ? 'bg-primary/10 border-primary/30' : 'border-transparent hover:bg-muted/50'}`}>
                     <input
                       type="radio"
                       name="multiCompanyMode"
                       checked={filters.multiCompanyMode === 'union'}
                       onChange={() => handleMultiCompanyModeChange('union')}
-                      className="w-5 h-5 sm:w-4 sm:h-4 accent-primary"
+                      className="w-4 h-4 accent-primary"
                     />
-                    <span className="text-sm sm:text-base">
-                      Union
-                      
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Union (OR)</span>
+                      <span className="text-[10px] text-muted-foreground">Show questions from ANY selected company</span>
+                    </div>
                   </label>
-                  <label className="flex items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1 rounded-full px-2 sm:px-3 border border-transparent hover:border-border/70 transition-colors">
+                  <label className={`flex items-center space-x-3 cursor-pointer touch-manipulation p-2 rounded-lg border transition-all ${filters.multiCompanyMode === 'intersection' ? 'bg-primary/10 border-primary/30' : 'border-transparent hover:bg-muted/50'}`}>
                     <input
                       type="radio"
                       name="multiCompanyMode"
                       checked={filters.multiCompanyMode === 'intersection'}
                       onChange={() => handleMultiCompanyModeChange('intersection')}
-                      className="w-5 h-5 sm:w-4 sm:h-4 accent-primary"
+                      className="w-4 h-4 accent-primary"
                     />
-                    <span className="text-sm sm:text-base">
-                      Intersection
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">Intersection (AND)</span>
+                      <span className="text-[10px] text-muted-foreground">Show questions common to ALL selected companies</span>
+                    </div>
                   </label>
                 </div>
               </div>

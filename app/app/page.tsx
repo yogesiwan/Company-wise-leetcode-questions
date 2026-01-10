@@ -386,11 +386,9 @@ export default function AppPage() {
 
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:items-start">
-          {/* Filters Sidebar - Mobile: Overlay, Desktop: Sidebar */}
-          <div
-            className={`lg:col-span-1 ${filtersOpen ? 'block' : 'hidden'} lg:block lg:sticky lg:top-24 lg:self-start`}
-          >
-            {/* Mobile Overlay */}
+          {/* Filters Sidebar - Mobile: Overlay, Desktop: Sticky Sidebar */}
+          <div className={`lg:col-span-1 ${filtersOpen ? 'block' : 'hidden'} lg:block`}>
+            {/* Mobile Overlay Background */}
             {filtersOpen && (
               <div
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
@@ -398,11 +396,13 @@ export default function AppPage() {
                 aria-hidden="true"
               />
             )}
-            {/* Filters Panel */}
-            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card/90 lg:bg-transparent backdrop-blur-2xl lg:backdrop-blur-0 border-r border-white/15 dark:border-white/10 lg:border-none shadow-xl lg:shadow-none flex flex-col lg:block lg:max-h-[calc(100vh-7rem)] transform transition-transform duration-300 ease-in-out ${
-              filtersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+            
+            {/* Mobile Filters Panel - Fixed full height slide-in */}
+            <div className={`fixed inset-y-0 left-0 z-50 w-80 sm:w-96 max-w-[85vw] bg-card/95 backdrop-blur-2xl border-r border-white/15 dark:border-white/10 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+              filtersOpen ? 'translate-x-0' : '-translate-x-full'
             }`}>
-              <div className="sticky top-0 bg-card/90 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between lg:hidden flex-shrink-0 z-10">
+              {/* Mobile Header */}
+              <div className="sticky top-0 bg-card/95 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between z-10">
                 <h2 className="text-lg font-bold">Filters</h2>
                 <button
                   onClick={() => setFiltersOpen(false)}
@@ -414,7 +414,8 @@ export default function AppPage() {
                   </svg>
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto overscroll-contain lg:overflow-visible pb-8 lg:pb-0">
+              {/* Mobile Scrollable Content */}
+              <div className="h-[calc(100vh-60px)] overflow-y-auto overscroll-contain pb-8">
                 <Filters
                   companies={companies}
                   filters={filters}
@@ -427,6 +428,17 @@ export default function AppPage() {
                   }}
                 />
               </div>
+            </div>
+            
+            {/* Desktop Filters Panel - Sticky sidebar with internal scroll */}
+            <div className="hidden lg:block sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
+              <Filters
+                companies={companies}
+                filters={filters}
+                onFiltersChange={(newFilters) => {
+                  setFilters(newFilters);
+                }}
+              />
             </div>
           </div>
 

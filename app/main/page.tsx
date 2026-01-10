@@ -35,6 +35,7 @@ export default function AppPage() {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState(25);
   const [filtersOpen, setFiltersOpen] = React.useState(false);
+  const [showDesktopFilters, setShowDesktopFilters] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [searchResults, setSearchResults] = React.useState<LeetCodeQuestion[]>([]);
   const [searchLoading, setSearchLoading] = React.useState(false);
@@ -451,52 +452,75 @@ export default function AppPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:items-start">
-          {/* Filters Sidebar - Mobile: Overlay, Desktop: Sidebar */}
-          <div
-            className={`lg:col-span-1 ${filtersOpen ? 'block' : 'hidden'} lg:block lg:sticky lg:top-24 lg:self-start`}
-          >
-            {/* Mobile Overlay */}
-            {filtersOpen && (
-              <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
-                onClick={() => setFiltersOpen(false)}
-                aria-hidden="true"
-              />
-            )}
-            {/* Filters Panel */}
-            <div className={`fixed lg:static inset-y-0 left-0 z-50 lg:z-auto w-80 sm:w-96 lg:w-full max-w-full bg-card/90 lg:bg-transparent backdrop-blur-2xl lg:backdrop-blur-0 border-r border-white/15 dark:border-white/10 lg:border-none shadow-xl lg:shadow-none flex flex-col lg:block lg:max-h-[calc(100vh-7rem)] transform transition-transform duration-300 ease-in-out ${
-              filtersOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-            }`}>
-              <div className="sticky top-0 bg-card/90 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between lg:hidden flex-shrink-0 z-10">
-                <h2 className="text-lg font-bold">Filters</h2>
-                <button
+      {/* Dashboard Layout - Fixed height with independent scrolling columns */}
+      <div className="lg:h-[calc(100vh-80px)] lg:overflow-hidden">
+        <div className="container mx-auto px-3 sm:px-4 h-full">
+          <div className={`grid grid-cols-1 ${showDesktopFilters ? 'lg:grid-cols-4' : 'lg:grid-cols-1'} gap-4 sm:gap-6 h-full lg:py-4 transition-all duration-300`}>
+            {/* Filters Sidebar - Mobile: Overlay, Desktop: Scrollable Column */}
+            <div className={`lg:col-span-1 ${filtersOpen ? 'block' : 'hidden'} ${showDesktopFilters ? 'lg:block' : 'lg:hidden'} lg:h-full`}>
+              {/* Mobile Overlay Background */}
+              {filtersOpen && (
+                <div
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
                   onClick={() => setFiltersOpen(false)}
-                  className="p-2 rounded-lg hover:bg-accent transition-colors"
-                  aria-label="Close filters"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  aria-hidden="true"
+                />
+              )}
+              
+              {/* Mobile Filters Panel - Fixed full height slide-in */}
+              <div className={`fixed inset-y-0 left-0 z-50 w-80 sm:w-96 max-w-[85vw] bg-card/95 backdrop-blur-2xl border-r border-white/15 dark:border-white/10 shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+                filtersOpen ? 'translate-x-0' : '-translate-x-full'
+              }`}>
+                {/* Mobile Header */}
+                <div className="sticky top-0 bg-card/95 backdrop-blur-2xl border-b border-white/15 dark:border-white/10 p-4 flex items-center justify-between z-10">
+                  <h2 className="text-lg font-bold">Filters</h2>
+                  <button
+                    onClick={() => setFiltersOpen(false)}
+                    className="p-2 rounded-lg hover:bg-accent transition-colors"
+                    aria-label="Close filters"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {/* Mobile Scrollable Content */}
+                <div className="h-[calc(100vh-60px)] overflow-y-auto overscroll-contain pb-8">
+                  <Filters
+                    companies={companies}
+                    filters={filters}
+                    onFiltersChange={(newFilters) => {
+                      setFilters(newFilters);
+                    }}
+                  />
+                </div>
               </div>
-              <div className="flex-1 overflow-y-auto overscroll-contain lg:overflow-visible pb-8 lg:pb-0">
+              
+              {/* Desktop Filters Panel - Scrollable column */}
+              <div className="hidden lg:block max-h-[calc(100vh-120px)] overflow-y-auto overscroll-contain pr-2">
                 <Filters
                   companies={companies}
                   filters={filters}
                   onFiltersChange={(newFilters) => {
                     setFilters(newFilters);
-                    // Filters panel stays open until user manually closes it
                   }}
                 />
               </div>
             </div>
-          </div>
 
-          {/* Questions List */}
-          <div className="lg:col-span-3">
-            {/* Selected Companies Tags at Top */}
+            {/* Questions List - Scrollable column on desktop */}
+            <div className={`${showDesktopFilters ? 'lg:col-span-3' : 'lg:col-span-1'} py-4 sm:py-8 lg:py-0 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:pr-2`}>
+              {/* Desktop Toggle Filters Button */}
+              <button
+                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
+                className="hidden lg:inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary/80 hover:bg-accent/80 transition-colors border border-border/50"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                {showDesktopFilters ? 'Hide Filters' : 'Show Filters'}
+              </button>
+              {/* Selected Companies Tags at Top */}
             {!filters.showMostFrequent && filters.companies.length > 0 && (
               <div className="mb-4 p-3 sm:p-4 bg-card/80 backdrop-blur-2xl border border-white/15 dark:border-white/10 rounded-xl shadow-lg">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -586,9 +610,10 @@ export default function AppPage() {
                 />
               </>
             )}
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
