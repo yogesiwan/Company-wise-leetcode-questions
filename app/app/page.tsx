@@ -31,6 +31,7 @@ export default function AppPage() {
   const [questionStates, setQuestionStates] = React.useState<
     Record<string, { done: boolean; note: string }>
   >({});
+  const [lastUpdatedDate, setLastUpdatedDate] = React.useState('Nov 2025');
 
   // Load companies on mount
   React.useEffect(() => {
@@ -47,6 +48,24 @@ export default function AppPage() {
         setError('Failed to load companies');
         console.error(err);
       });
+  }, []);
+
+  // Fetch dynamic settings
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.settings?.lastUpdatedDate) {
+            setLastUpdatedDate(data.settings.lastUpdatedDate);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
   }, []);
 
   // Fetch questions when filters change
@@ -287,7 +306,7 @@ export default function AppPage() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 sm:gap-3">
               <span className="hidden sm:inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary shadow-sm">
-                Updated to Nov 2025
+                Updated to {lastUpdatedDate}
               </span>
             </div>
             <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground line-clamp-1">

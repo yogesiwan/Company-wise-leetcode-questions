@@ -28,7 +28,7 @@ export default function AppPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [filters, setFilters] = React.useState<FilterOptions>({
     companies: [],
-    difficulties: [],
+    difficulties: ['Easy', 'Medium', 'Hard'],
     showMostFrequent: false,
     multiCompanyMode: 'union',
   });
@@ -228,21 +228,8 @@ export default function AppPage() {
     };
   }, [session, questionIdsString]);
 
-  // Show loading state while checking auth or redirecting
-  if (status === 'loading' || !session?.user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card/70">
-            <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-primary/60 border-t-transparent" />
-          </div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Calculate remaining derived values for rendering - memoized
+  // IMPORTANT: All hooks must be declared BEFORE any conditional returns
   const activeLoading = React.useMemo(
     () => isSearchActive ? searchLoading : loading,
     [isSearchActive, searchLoading, loading]
@@ -341,6 +328,20 @@ export default function AppPage() {
       // keep optimistic UI; errors only logged
     }
   }, [session]);
+
+  // Show loading state while checking auth or redirecting
+  if (status === 'loading' || !session?.user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card/70">
+            <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-primary/60 border-t-transparent" />
+          </div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -485,10 +486,7 @@ export default function AppPage() {
                 filters={filters}
                 onFiltersChange={(newFilters) => {
                   setFilters(newFilters);
-                  // Close filters on mobile after selection
-                  if (window.innerWidth < 1024) {
-                    setFiltersOpen(false);
-                  }
+                  // Filters panel stays open until user manually closes it
                 }}
               />
             </div>

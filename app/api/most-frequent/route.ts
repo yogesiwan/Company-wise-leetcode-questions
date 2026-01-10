@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authConfig } from '@/lib/auth';
 import { getMostFrequentQuestions } from '@/lib/data-parser';
 
 export async function GET(request: NextRequest) {
+  // Authentication check - protect question data
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      { error: 'Unauthorized. Please sign in to access most frequent questions.' },
+      { status: 401 }
+    );
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const minCompanies = parseInt(searchParams.get('minCompanies') || '2', 10);

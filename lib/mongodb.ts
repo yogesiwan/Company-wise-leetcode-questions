@@ -32,4 +32,98 @@ export interface UserQuestionState {
   updatedAt: Date;
 }
 
+// User tracking - automatically populated on sign-in
+export interface User {
+  email: string;           // Primary key
+  name?: string;           // Display name from OAuth
+  image?: string;          // Profile picture URL
+  provider: string;        // Auth provider (e.g., "google")
+  createdAt: Date;         // First sign-in timestamp
+  lastLoginAt: Date;       // Most recent sign-in
+  loginCount: number;      // Total number of sign-ins
+}
 
+// Admin users for admin dashboard access
+export interface AdminUser {
+  email: string;           // Admin user's email
+  addedAt: Date;           // When admin was added
+  addedBy: string;         // Who added this admin
+}
+
+// Helper function to check if a user is an admin
+export async function isAdmin(email: string): Promise<boolean> {
+  // Check env var first (faster, no DB call)
+  const envAdmins = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()) || [];
+  if (envAdmins.includes(email)) return true;
+  
+  // Fallback to database check
+  const db = await getDb();
+  const admin = await db.collection<AdminUser>('adminUsers').findOne({ email });
+  return !!admin;
+}
+
+// App settings - admin-configurable values
+export interface AppSetting {
+  key: string;             // Setting identifier (e.g., "lastUpdatedDate")
+  value: string;           // Setting value
+  updatedAt: Date;         // Last update timestamp
+  updatedBy: string;       // Email of admin who updated
+}
+
+// Default settings values
+const DEFAULT_SETTINGS: Record<string, string> = {
+  lastUpdatedDate: 'Nov 2025',
+};
+
+// Get an app setting from the database (with fallback to default)
+export async function getAppSetting(key: string): Promise<string> {
+  try {
+    const db = await getDb();
+    const setting = await db.collection<AppSetting>('appSettings').findOne({ key });
+    return setting?.value ?? DEFAULT_SETTINGS[key] ?? '';
+  } catch (error) {
+    console.error(`Error getting app setting '${key}':`, error);
+    return DEFAULT_SETTINGS[key] ?? '';
+  }
+}
+
+// Set an app setting in the database
+export async function setAppSetting(key: string, value: string, updatedBy: string): Promise<boolean> {
+  try {
+    const db = await getDb();
+    await db.collection<AppSetting>('appSettings').updateOne(
+      { key },
+      {
+        $set: {
+          value,
+          updatedAt: new Date(),
+          updatedBy,
+        },
+        $setOnInsert: {
+          key,
+        },
+      },
+      { upsert: true }
+    );
+    return true;
+  } catch (error) {
+    console.error(`Error setting app setting '${key}':`, error);
+    return false;
+  }
+}
+
+// Get all app settings
+export async function getAllAppSettings(): Promise<Record<string, string>> {
+  try {
+    const db = await getDb();
+    const settings = await db.collection<AppSetting>('appSettings').find({}).toArray();
+    const result: Record<string, string> = { ...DEFAULT_SETTINGS };
+    for (const setting of settings) {
+      result[setting.key] = setting.value;
+    }
+    return result;
+  } catch (error) {
+    console.error('Error getting all app settings:', error);
+    return { ...DEFAULT_SETTINGS };
+  }
+}

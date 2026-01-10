@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth-provider';
 import { ToastProvider } from '@/components/toast';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { DynamicFooterText } from '@/components/dynamic-footer-text';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
@@ -99,9 +100,7 @@ export default function RootLayout({
                             <span className="hidden sm:inline text-muted-foreground/60 text-xs">
                               •
                             </span>
-                            <span className="text-[11px] sm:text-xs text-muted-foreground/70">
-                              All Questions from LeetCode premium upto Nov 2025.
-                            </span>
+                            <DynamicFooterText />
                           </div>
 
                           {/* Right section - Links and CTA */}

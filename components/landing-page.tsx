@@ -10,12 +10,31 @@ import { useToast } from './toast';
 
 export function LandingPage() {
   const [mounted, setMounted] = React.useState(false);
+  const [lastUpdatedDate, setLastUpdatedDate] = React.useState('Nov 2025');
   const { data: session, status } = useSession();
   const router = useRouter();
   const { addToast } = useToast();
 
   React.useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Fetch dynamic settings
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.settings?.lastUpdatedDate) {
+            setLastUpdatedDate(data.settings.lastUpdatedDate);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
   }, []);
 
   const handleStartPreparing = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -95,7 +114,7 @@ export function LandingPage() {
   const stats = [
     { label: 'Companies', value: '100+'},
     { label: 'Questions', value: '2000+'},
-    { label: 'Updated', value: 'Nov 2025'},
+    { label: 'Updated', value: lastUpdatedDate},
   ];
 
   return (
@@ -159,7 +178,7 @@ export function LandingPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-full w-full bg-primary"></span>
               </span>
-              <span className="whitespace-nowrap">Updated to November 2025</span>
+              <span className="whitespace-nowrap">Updated to {lastUpdatedDate}</span>
             </div>
 
             {/* Main Headline */}

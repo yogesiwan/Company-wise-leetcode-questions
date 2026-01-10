@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authConfig } from '@/lib/auth';
 import { getAllQuestions } from '@/lib/data-parser';
 
 const MIN_SEARCH_LENGTH = 2;
 const MAX_RESULTS = 150;
 
 export async function GET(request: NextRequest) {
+  // Authentication check - protect question data
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      { error: 'Unauthorized. Please sign in to search questions.' },
+      { status: 401 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const rawQuery = searchParams.get('q')?.trim() ?? '';

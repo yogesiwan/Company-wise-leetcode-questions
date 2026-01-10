@@ -80,8 +80,8 @@ export const Filters = React.memo(function Filters({ companies, filters, onFilte
   );
 
   return (
-    <div className="space-y-6 border border-4 border-gray-200 dark:border-gray-800 sm:space-y-8 p-5 sm:p-7 bg-white/10 dark:bg-black/20 rounded-3xl">
-      <div className="hidden flex flex-col lg:flex items-baseline justify-between gap-2">
+    <div className="space-y-6 border-4 border-gray-200 dark:border-gray-800 sm:space-y-8 p-5 sm:p-7 bg-white/10 dark:bg-black/20 rounded-3xl">
+      <div className="hidden lg:flex flex-col items-baseline justify-between gap-2">
         <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground/95">
           Filters
         </h2>
@@ -193,9 +193,7 @@ export const Filters = React.memo(function Filters({ companies, filters, onFilte
                     />
                     <span className="text-sm sm:text-base">
                       Union
-                      <span className="ml-1 text-[11px] text-muted-foreground">
-                        All questions across selected companies
-                      </span>
+                      
                     </span>
                   </label>
                   <label className="flex items-center space-x-2 sm:space-x-3 cursor-pointer touch-manipulation py-1 rounded-full px-2 sm:px-3 border border-transparent hover:border-border/70 transition-colors">
@@ -208,9 +206,6 @@ export const Filters = React.memo(function Filters({ companies, filters, onFilte
                     />
                     <span className="text-sm sm:text-base">
                       Intersection
-                      <span className="ml-1 text-[11px] text-muted-foreground">
-                        Only questions common to all selected companies
-                      </span>
                     </span>
                   </label>
                 </div>

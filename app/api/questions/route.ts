@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authConfig } from '@/lib/auth';
 import { getFilteredQuestions, validateFilterOptions } from '@/lib/data-filter';
 import { FilterOptions } from '@/types';
 
 export async function POST(request: NextRequest) {
+  // Authentication check - protect question data
+  const session = await getServerSession(authConfig);
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      { error: 'Unauthorized. Please sign in to access questions.' },
+      { status: 401 }
+    );
+  }
+
   try {
     const body = await request.json();
     const options: FilterOptions = {
